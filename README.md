@@ -38,3 +38,6 @@ optional arguments:
                         -b are mutually exclusive
 ```
 
+# Blog
+Blogpost describing how we debugged a production issue with the help of this
+exporter is [published on our blog](https://shw.mx/ethtool).
