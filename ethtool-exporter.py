@@ -77,11 +77,11 @@ class EthtoolCollector(object):
                   '-w and -b are mutually exclusive')
         )
         arguments = parser.parse_args(args)
-        if arguments.oneshot and not args.textfile_name:
+        if arguments.oneshot and not arguments.textfile_name:
             logging.error('Oneshot has to be used with textfile mode')
             parser.print_help()
             sys.exit(1)
-        if arguments.interval and not args.textfile_name:
+        if arguments.interval and not arguments.textfile_name:
             logging.error('Interval has to be used with textfile mode')
             parser.print_help()
             sys.exit(1)
