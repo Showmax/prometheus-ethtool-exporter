@@ -117,8 +117,9 @@ class EthtoolCollector(object):
             sys.exit(1)
         data = proc.communicate()[0]
         if proc.returncode != 0:
-            raise Exception('Ethtool returned non-zero return '
+            logging.critical('Ethtool returned non-zero return '
                             'code for interface {}'.format(iface))
+            return
         data = data.decode('utf-8').split('\n')
         key_set = set()
         for line in data:
