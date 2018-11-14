@@ -129,6 +129,8 @@ class EthtoolCollector(object):
             line = line.strip()
             try:
                 key, value = line.split(': ')
+                key = key.strip()
+                value = value.strip()
                 value = float(value)
             except ValueError:
                 logging.warning('Failed parsing "{}"'.format(line))
