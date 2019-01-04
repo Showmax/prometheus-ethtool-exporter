@@ -4,7 +4,7 @@ apiVersion: apps/v1beta2
 kind: DaemonSet
 metadata:
   name: ethtool-exporter
-  namespace: monitoring
+#  namespace: monitoring
   labels:
     app: ethtool-exporter
 spec:
@@ -23,8 +23,8 @@ spec:
         app: ethtool-exporter
     spec:
       hostNetwork: true
-      imagePullSecrets:
-        {{IMAGE_PULL_SECRETS}}
+#      imagePullSecrets:
+#        {{IMAGE_PULL_SECRETS}}
 
       terminationGracePeriodSeconds: 0
       containers:
@@ -34,8 +34,8 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: status.podIP      
-        image: {{DOCKER_REGISTRY}}/ethtool-exporter:{{DOCKER_TAG}}
-#        image: drdivano/ethtool-exporter@sha256:b0d883597b5a753d40f5249e1b5e247a49b32b703ae81dec01408d3a47f2912b
+#        image: {{DOCKER_REGISTRY}}/ethtool-exporter:{{DOCKER_TAG}}
+        image: drdivano/ethtool-exporter@sha256:b0d883597b5a753d40f5249e1b5e247a49b32b703ae81dec01408d3a47f2912b
         command:
           - "sh"
           - "-exc"
@@ -64,7 +64,7 @@ metadata:
   labels:
     app: ethtool-exporter
   name: ethtool-exporter
-  namespace: monitoring
+#  namespace: monitoring
 spec:
   clusterIP: None
   ports:
