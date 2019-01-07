@@ -1,0 +1,74 @@
+---
+# based on example https://github.com/coreos/prometheus-operator/blob/master/contrib/kube-prometheus/manifests/node-exporter-daemonset.yaml
+apiVersion: apps/v1beta2
+kind: DaemonSet
+metadata:
+  name: ethtool-exporter
+#  namespace: monitoring
+  labels:
+    app: ethtool-exporter
+spec:
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 100%
+  selector:
+    matchLabels:
+      app: ethtool-exporter
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9417'      
+      labels:
+        app: ethtool-exporter
+    spec:
+      hostNetwork: true
+#      imagePullSecrets:
+#        {{IMAGE_PULL_SECRETS}}
+
+      terminationGracePeriodSeconds: 0
+      containers:
+      - name: ethtool-exporter
+        env:
+        - name: IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP      
+#        image: {{DOCKER_REGISTRY}}/ethtool-exporter:{{DOCKER_TAG}}
+        image: drdivano/ethtool-exporter@sha256:39e0916b16de07f62c2becb917c94cbb3a6e124a577e1325505e4d0cdd550d7b
+        command:
+          - "sh"
+          - "-exc"
+          - "python3 /ethtool-exporter.py -l $(IP):9417 -I '(eth|em|eno|ens|enp)[0-9s]+'"
+        ports:
+        - containerPort: 9417
+          hostPort: 9417
+          name: http
+          
+        resources:
+          limits:
+            cpu: 250m
+            memory: 100Mi
+          requests:
+            cpu: 10m
+            memory: 50Mi
+
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+        
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: ethtool-exporter
+  name: ethtool-exporter
+#  namespace: monitoring
+spec:
+  clusterIP: None
+  ports:
+    - name: http
+      port: 9417
+  selector:
+    app: ethtool-exporter
