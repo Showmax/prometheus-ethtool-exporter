@@ -35,11 +35,11 @@ spec:
             fieldRef:
               fieldPath: status.podIP      
 #        image: {{DOCKER_REGISTRY}}/ethtool-exporter:{{DOCKER_TAG}}
-        image: drdivano/ethtool-exporter@sha256:b0d883597b5a753d40f5249e1b5e247a49b32b703ae81dec01408d3a47f2912b
+        image: drdivano/ethtool-exporter@sha256:39e0916b16de07f62c2becb917c94cbb3a6e124a577e1325505e4d0cdd550d7b
         command:
           - "sh"
           - "-exc"
-          - "python3 /ethtool-exporter.py -l $(IP):9417 -I '(eth|em|eno)[0-9]+'"
+          - "python3 /ethtool-exporter.py -l $(IP):9417 -I '(eth|em|eno|ens|enp)[0-9s]+'"
         ports:
         - containerPort: 9417
           hostPort: 9417
