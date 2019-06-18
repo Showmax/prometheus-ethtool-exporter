@@ -9,7 +9,7 @@ import sys
 import time
 
 import prometheus_client
-
+from prometheus_client.core import GaugeMetricFamily
 
 class EthtoolCollector(object):
     """Collect ethtool metrics,publish them via http or save them to a file."""
@@ -130,7 +130,7 @@ class EthtoolCollector(object):
             logging.critical('Ethtool returned non-zero return '
                     'code for interface {}, the message was: {}'.format(iface, err))
             return
-        data = data[0].decode('utf-8').split('\n')
+        data = data.decode('utf-8').split('\n')
         key_set = set()
         for line in data:
             # drop empty lines and the header
@@ -162,7 +162,7 @@ class EthtoolCollector(object):
         Collect the metrics and yield them. Prometheus client library
         uses this method to respond to http queries or save them to disk.
         """
-        gauge = prometheus_client.core.GaugeMetricFamily(
+        gauge = GaugeMetricFamily(
             'node_net_ethtool', 'Ethtool data', labels=['device', 'type'])
         for iface in self.find_physical_interfaces():
             self.update_ethtool_stats(iface, gauge)
