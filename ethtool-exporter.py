@@ -61,6 +61,14 @@ class EthtoolCollector(object):
             default=False,
             help='Run only once and exit. Useful for running in a cronjob'
         )
+        parser.add_argument(
+            '-q',
+            '--quiet',
+            dest='quiet',
+            action='store_true',
+            default=False,
+            help='Silence any error messages and warnings'
+        )
         wblistgroup = parser.add_mutually_exclusive_group()
         wblistgroup.add_argument(
             '-w',
@@ -77,6 +85,8 @@ class EthtoolCollector(object):
                   '-w and -b are mutually exclusive')
         )
         arguments = parser.parse_args(args)
+        if arguments.quiet:
+            logging.getLogger().setLevel(100)
         if arguments.oneshot and not arguments.textfile_name:
             logging.error('Oneshot has to be used with textfile mode')
             parser.print_help()
@@ -107,7 +117,7 @@ class EthtoolCollector(object):
         """Update gauge with statistics from ethtool for interface iface."""
         command = ['/sbin/ethtool', '-S', iface]
         try:
-            proc = subprocess.Popen(command, stdout=subprocess.PIPE)
+            proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         except FileNotFoundError:
             logging.critical('/sbin/ethtool not found. Giving up')
             sys.exit(1)
@@ -115,12 +125,12 @@ class EthtoolCollector(object):
             logging.critical('Permission error trying to '
                              'run /sbin/ethtool: {}'.format(e))
             sys.exit(1)
-        data = proc.communicate()[0]
+        data, err = proc.communicate()
         if proc.returncode != 0:
             logging.critical('Ethtool returned non-zero return '
-                            'code for interface {}'.format(iface))
+                    'code for interface {}, the message was: {}'.format(iface, err))
             return
-        data = data.decode('utf-8').split('\n')
+        data = data[0].decode('utf-8').split('\n')
         key_set = set()
         for line in data:
             # drop empty lines and the header
