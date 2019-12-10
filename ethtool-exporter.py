@@ -17,6 +17,7 @@ class EthtoolCollector(object):
     def __init__(self, args=None):
         """Construct the object and parse the arguments."""
         self.args = None
+        self.ethtool = None
         if not args:
             args = sys.argv[1:]
         self._parse_args(args)
@@ -115,15 +116,15 @@ class EthtoolCollector(object):
 
     def update_ethtool_stats(self, iface, gauge):
         """Update gauge with statistics from ethtool for interface iface."""
-        command = ['/sbin/ethtool', '-S', iface]
+        command = [self.ethtool, '-S', iface]
         try:
             proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         except FileNotFoundError:
-            logging.critical('/sbin/ethtool not found. Giving up')
+            logging.critical(self.ethtool + ' not found. Giving up')
             sys.exit(1)
         except PermissionError as e:
-            logging.critical('Permission error trying to '
-                             'run /sbin/ethtool: {}'.format(e))
+            logging.critical('Permission error trying to run '
+                             + self.ethtool + ' : {}'.format(e))
             sys.exit(1)
         data, err = proc.communicate()
         if proc.returncode != 0:
@@ -178,9 +179,27 @@ class EthtoolCollector(object):
                 if re.match(self.args['interface_regex'], file):
                     yield file
 
-
 if __name__ == '__main__':
+    directories = []
+    ethtool = None
+
+    path = os.getenv("PATH")
+    if path is not None:
+        directories = path.split(os.pathsep)
+
+    directories.extend(["/usr/sbin", "/sbin"])
+
+    for d in directories:
+        candidate = os.path.join(d, "ethtool")
+        if os.path.exists(candidate):
+            ethtool = candidate
+            break
+
+    if ethtool is None:
+        sys.exit("Error: cannot find ethtool.")
+
     collector = EthtoolCollector()
+    collector.ethtool = ethtool
     registry = prometheus_client.CollectorRegistry()
     registry.register(collector)
     args = collector.args
