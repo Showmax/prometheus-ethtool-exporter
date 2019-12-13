@@ -182,7 +182,6 @@ class EthtoolCollector(object):
                     yield file
 
 if __name__ == '__main__':
-
     path = os.getenv("PATH", "")
     path = os.pathsep.join([path, "/usr/sbin", "/sbin"])
     ethtool = find_executable("ethtool", path)
