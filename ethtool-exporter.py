@@ -8,6 +8,8 @@ import subprocess
 import sys
 import time
 
+from distutils.spawn import find_executable
+
 import prometheus_client
 from prometheus_client.core import GaugeMetricFamily
 
@@ -180,21 +182,10 @@ class EthtoolCollector(object):
                     yield file
 
 if __name__ == '__main__':
-    directories = []
-    ethtool = None
 
-    path = os.getenv("PATH")
-    if path is not None:
-        directories = path.split(os.pathsep)
-
-    directories.extend(["/usr/sbin", "/sbin"])
-
-    for d in directories:
-        candidate = os.path.join(d, "ethtool")
-        if os.path.exists(candidate):
-            ethtool = candidate
-            break
-
+    path = os.getenv("PATH", "")
+    path = os.pathsep.join([path, "/usr/sbin", "/sbin"])
+    ethtool = find_executable("ethtool", path)
     if ethtool is None:
         sys.exit("Error: cannot find ethtool.")
 
