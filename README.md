@@ -10,6 +10,8 @@ daemon.
 You can either use this as a standalone exporter that listens on an HTTP port, or use it to save data
 on disk in a .prom file either periodically or just once, and run it from cron or something similar.
 
+Warning: since 0.3.0, the code relies on Python3 specific code. If you need to use Python2, use
+the 0.2.6 version.
 # Usage
 ```
 usage: ethtool-exporter.py [-h] (-f TEXTFILE_NAME | -l LISTEN) [-i INTERVAL]
