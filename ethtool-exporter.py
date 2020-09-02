@@ -117,6 +117,10 @@ class EthtoolCollector(object):
             logging.error('Interval has to be used with textfile mode')
             parser.print_help()
             sys.exit(1)
+        if arguments.listen_address and not arguments.port:
+            logging.error('Listen address has to be used with a listen port')
+            parser.print_help()
+            sys.exit(1)
         if not arguments.interval:
             arguments.interval = 5
         self.args = vars(arguments)
@@ -222,9 +226,9 @@ if __name__ == '__main__':
     args = collector.args
     if args['listen'] or args['port']:
         if args['listen']:
-            logging.warning(('You are using obsolete argument -l.'
-                            'Please switch to -L and -p'))
-            (ip, port) = args['listen'].rsplit(':', 1)
+            logging.warning('You are using obsolete argument -l.'
+                            'Please switch to -L and -p')
+            ip, port = args['listen'].rsplit(':', 1)
         else:
             ip = args['listen_address']
             port = args['port']
