@@ -219,10 +219,12 @@ if __name__ == '__main__':
         if args['listen']:
             logging.warning(('You are using obsolete argument -l.'
                             'Please switch to -L and -p'))
-            (ip, port) = args['listen'].split(':')
+            (ip, port) = args['listen'].rsplit(':', 1)
         else:
             ip = args['listen_address']
             port = args['port']
+        # Remove optional IPv6 braces if present, i.e. [::1] => ::1
+        ip = ip.replace('[', '').replace(']', '')
         port = int(port)
         if ':' in ip:
             server_class = IPv6HTTPServer
