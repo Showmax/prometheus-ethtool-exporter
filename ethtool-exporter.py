@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 """Collect ethtool metrics,publish them via http or save them to a file."""
 import argparse
+from http.server import HTTPServer
 import logging
 import os
 import re
+import socket
+import socketserver
 import subprocess
 import sys
 import time
@@ -12,6 +15,7 @@ from distutils.spawn import find_executable
 
 import prometheus_client
 from prometheus_client.core import GaugeMetricFamily
+
 
 class EthtoolCollector(object):
     """Collect ethtool metrics,publish them via http or save them to a file."""
@@ -39,7 +43,22 @@ class EthtoolCollector(object):
             '-l',
             '--listen',
             dest='listen',
-            help='Listen host:port, i.e. 0.0.0.0:9417'
+            help=('OBSOLETE. Use -L/-p instead. '
+                  'Listen host:port, i.e. 0.0.0.0:9417')
+        )
+        group.add_argument(
+            '-p',
+            '--port',
+            dest='port',
+            type=int,
+            help='Port to listen on, i.e. 9417'
+        )
+        parser.add_argument(
+            '-L',
+            '--listen-address',
+            dest='listen_address',
+            default='0.0.0.0',
+            help='IP address to listen on'
         )
         parser.add_argument(
             '-i',
@@ -120,7 +139,8 @@ class EthtoolCollector(object):
         """Update gauge with statistics from ethtool for interface iface."""
         command = [self.ethtool, '-S', iface]
         try:
-            proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            proc = subprocess.Popen(command, stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
         except FileNotFoundError:
             logging.critical(self.ethtool + ' not found. Giving up')
             sys.exit(1)
@@ -131,7 +151,8 @@ class EthtoolCollector(object):
         data, err = proc.communicate()
         if proc.returncode != 0:
             logging.critical('Ethtool returned non-zero return '
-                    'code for interface {}, the message was: {}'.format(iface, err))
+                             'code for interface {}, the message'
+                             'was: {}'.format(iface, err))
             return
         data = data.decode('utf-8').split('\n')
         key_set = set()
@@ -181,6 +202,11 @@ class EthtoolCollector(object):
                 if re.match(self.args['interface_regex'], file):
                     yield file
 
+
+class IPv6HTTPServer(HTTPServer):
+    address_family = socket.AF_INET6
+
+
 if __name__ == '__main__':
     path = os.getenv("PATH", "")
     path = os.pathsep.join([path, "/usr/sbin", "/sbin"])
@@ -192,11 +218,25 @@ if __name__ == '__main__':
     collector.ethtool = ethtool
     registry = prometheus_client.CollectorRegistry()
     registry.register(collector)
+    EthtoolMetricsHandler = prometheus_client.MetricsHandler.factory(registry)
     args = collector.args
-    if args['listen']:
-        (ip, port) = args['listen'].split(':')
-        prometheus_client.start_http_server(port=int(port),
-                                            addr=ip, registry=registry)
+    if args['listen'] or args['port']:
+        if args['listen']:
+            logging.warning(('You are using obsolete argument -l.'
+                            'Please switch to -L and -p'))
+            (ip, port) = args['listen'].rsplit(':', 1)
+        else:
+            ip = args['listen_address']
+            port = args['port']
+        # Remove optional IPv6 braces if present, i.e. [::1] => ::1
+        ip = ip.replace('[', '').replace(']', '')
+        port = int(port)
+        if ':' in ip:
+            server_class = IPv6HTTPServer
+        else:
+            server_class = HTTPServer
+        httpd = server_class((ip, port), EthtoolMetricsHandler)
+        httpd.serve_forever()
         while True:
             time.sleep(3600)
     if args['textfile_name']:
