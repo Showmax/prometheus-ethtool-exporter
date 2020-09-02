@@ -16,6 +16,7 @@ from distutils.spawn import find_executable
 import prometheus_client
 from prometheus_client.core import GaugeMetricFamily
 
+
 class EthtoolCollector(object):
     """Collect ethtool metrics,publish them via http or save them to a file."""
 
@@ -138,7 +139,8 @@ class EthtoolCollector(object):
         """Update gauge with statistics from ethtool for interface iface."""
         command = [self.ethtool, '-S', iface]
         try:
-            proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            proc = subprocess.Popen(command, stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
         except FileNotFoundError:
             logging.critical(self.ethtool + ' not found. Giving up')
             sys.exit(1)
@@ -149,7 +151,8 @@ class EthtoolCollector(object):
         data, err = proc.communicate()
         if proc.returncode != 0:
             logging.critical('Ethtool returned non-zero return '
-                    'code for interface {}, the message was: {}'.format(iface, err))
+                             'code for interface {}, the message'
+                             'was: {}'.format(iface, err))
             return
         data = data.decode('utf-8').split('\n')
         key_set = set()
@@ -199,8 +202,10 @@ class EthtoolCollector(object):
                 if re.match(self.args['interface_regex'], file):
                     yield file
 
+
 class IPv6HTTPServer(HTTPServer):
     address_family = socket.AF_INET6
+
 
 if __name__ == '__main__':
     path = os.getenv("PATH", "")
