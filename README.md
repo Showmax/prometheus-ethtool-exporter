@@ -14,8 +14,9 @@ Warning: since 0.3.0, the code relies on Python3 specific code. If you need to u
 the 0.2.6 version.
 # Usage
 ```
-usage: ethtool-exporter.py [-h] (-f TEXTFILE_NAME | -l LISTEN) [-i INTERVAL]
-                           [-I INTERFACE_REGEX] [-1]
+usage: ethtool-exporter.py [-h] (-f TEXTFILE_NAME | -l LISTEN | -p PORT)
+                           [-L LISTEN_ADDRESS] [-i INTERVAL]
+                           [-I INTERFACE_REGEX] [-1] [-q]
                            [-w WHITELIST_REGEX | -b BLACKLIST_REGEX]
 
 optional arguments:
@@ -24,7 +25,11 @@ optional arguments:
                         Full file path where to store data for node collector
                         to pick up
   -l LISTEN, --listen LISTEN
-                        Listen host:port, i.e. 0.0.0.0:9417
+                        OBSOLETE. Use -L/-p instead. Listen host:port, i.e.
+                        0.0.0.0:9417
+  -p PORT, --port PORT  Port to listen on, i.e. 9417
+  -L LISTEN_ADDRESS, --listen-address LISTEN_ADDRESS
+                        IP address to listen on
   -i INTERVAL, --interval INTERVAL
                         Number of seconds between updates of the textfile.
                         Default is 5 seconds
@@ -32,6 +37,7 @@ optional arguments:
                         Only scrape interfaces whose name matches this regex
   -1, --oneshot         Run only once and exit. Useful for running in a
                         cronjob
+  -q, --quiet           Silence any error messages and warnings
   -w WHITELIST_REGEX, --whitelist-regex WHITELIST_REGEX
                         Only include values whose name matches this regex. -w
                         and -b are mutually exclusive
