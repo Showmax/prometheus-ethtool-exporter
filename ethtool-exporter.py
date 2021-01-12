@@ -303,14 +303,12 @@ class EthtoolCollector(object):
             labels[key] = value
         info.add_metric(labels.values(), labels)
 
-    def add_split(self, sensors, key, value):
+    def add_split(self, sensors, iface, key, value):
         """Helper method to split values like '10.094 mA'"""
-        val, unit = value.split(' ')
-        labels = {
-                'device': device,
-                'type': key + '_' + unit,
-                }
-        sensors.add_metric(labels=labels, value=float(value))
+        val, unit = value.split(' ', 1)
+        unit = unit.replace(' ', '_')
+        labels = [iface, key + '_' + unit]
+        sensors.add_metric(labels=labels, value=float(val))
 
     def update_xcvr_info(self, iface, info, sensors, alarms):
         """Update transceiver metrics with info from ethtool."""
@@ -336,15 +334,15 @@ class EthtoolCollector(object):
                 info_labels[key] = value
             elif key in self.xcvr_sensors_whitelist:
                 if key == 'laser_bias_current' or key=='module_voltage':
-                    self.add_split(sensors, device, key, value)
+                    self.add_split(sensors, iface, key, value)
                 elif key=='laser_output_power' or key=='receiver_signal_average_optical_power' or key=='module_temperature':
                     for val in value.split(' / '):
-                        self.add_split(sensors, device, key, val)
+                        self.add_split(sensors, iface, key, val)
             elif key in self.xcvr_alarms_whitelist:
                 if value == 'Off':
                     continue
                 labels = {
-                        'device': device,
+                        'device': iface,
                         'type': key,
                         'value': value,
                         }
