@@ -14,7 +14,7 @@ import time
 from distutils.spawn import find_executable
 
 import prometheus_client
-from prometheus_client.core import GaugeMetricFamily
+from prometheus_client.core import GaugeMetricFamily, InfoMetricFamily
 
 
 class EthtoolCollector(object):
@@ -24,6 +24,73 @@ class EthtoolCollector(object):
         """Construct the object and parse the arguments."""
         self.args = None
         self.ethtool = None
+        self.basic_info_whitelist = [
+                'speed',
+                'duplex',
+                'port',
+                'link_detected',
+                ]
+        self.xcvr_info_whitelist = [
+                'identifier',
+                'extended_identifier',
+                'connector',
+                'transceiver_type',
+                'length_smf,km',
+                'length_smf',
+                'length_50um',
+                'length_62.5um',
+                'length_copper',
+                'length_om3',
+                'laser_wavelength',
+                'vendor_name',
+                'vendor_oui',
+                'vendor_pn',
+                'vendor_rev',
+                'vendor_sn',
+                'laser_bias_current_high_alarm_threshold',
+                'laser_bias_current_low_alarm_threshold',
+                'laser_bias_current_high_warning_threshold',
+                'laser_bias_current_low_warning_threshold',
+                'laser_output_power_high_alarm_threshold',
+                'laser_output_power_low_alarm_threshold',
+                'laser_output_power_high_warning_threshold',
+                'laser_output_power_low_warning_threshold',
+                'module_temperature_high_alarm_threshold',
+                'module_temperature_low_alarm_threshold',
+                'module_temperature_high_warning_threshold',
+                'module_temperature_low_warning_threshold',
+                'module_voltage_high_alarm_threshold',
+                'module_voltage_low_alarm_threshold',
+                'module_voltage_high_warning_threshold',
+                'module_voltage_low_warning_threshold',
+                'laser_rx_power_high_alarm_threshold',
+                'laser_rx_power_low_alarm_threshold',
+                'laser_rx_power_high_warning_threshold',
+                'laser_rx_power_low_warning_threshold',
+                ]
+        self.xcvr_sensors_whitelist = [
+                'laser_bias_current',
+                'laser_output_power',
+                'receiver_signal_average_optical_power',
+                'module_temperature',
+                'module_voltage',
+                ]
+        self.xcvr_alarms_base = [
+                'laser_bias_current',
+                'laser_output_power',
+                'module_temperature',
+                'module_voltage',
+                'laser_rx_power',
+                ]
+        self.xcvr_alamrs_ext = [
+                '_high_alarm',
+                '_low_alarm',
+                '_high_warning',
+                '_low_warning',
+                ]
+        # Cartesian product of the two lists above
+        self.xcvr_alarms_whitelist = [i+j for i in self.xcvr_alarms_base for j in self.xcvr_alamrs_ext]
+
         if not args:
             args = sys.argv[1:]
         self._parse_args(args)
@@ -139,9 +206,12 @@ class EthtoolCollector(object):
                 return True
         return True
 
-    def update_ethtool_stats(self, iface, gauge):
-        """Update gauge with statistics from ethtool for interface iface."""
-        command = [self.ethtool, '-S', iface]
+    def run_ethtool(self, iface, parameter, quiet=False):
+        """Run ethtool with select parameter"""
+        if parameter:
+            command = [self.ethtool, parameter, iface]
+        else:
+            command = [self.ethtool, iface]
         try:
             proc = subprocess.Popen(command, stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
@@ -154,9 +224,17 @@ class EthtoolCollector(object):
             sys.exit(1)
         data, err = proc.communicate()
         if proc.returncode != 0:
-            logging.critical('Ethtool returned non-zero return '
-                             'code for interface {}, the message'
-                             'was: {}'.format(iface, err))
+            if not quiet:
+                logging.critical('Ethtool returned non-zero return '
+                                 'code for interface {}, the message'
+                                 'was: {}'.format(iface, err))
+            return False
+        return data
+
+    def update_ethtool_stats(self, iface, gauge):
+        """Update gauge with statistics from ethtool for interface iface."""
+        data = self.run_ethtool(iface, '-S')
+        if not data:
             return
         data = data.decode('utf-8').split('\n')
         key_set = set()
@@ -183,6 +261,96 @@ class EthtoolCollector(object):
                 logging.warning('Item {} already seen, check the source '
                                 'data for interface {}'.format(key, iface))
 
+    def update_basic_info(self, iface, info):
+        """Update metric with info from ethtool for interface iface."""
+        data = self.run_ethtool(iface, '')
+        if not data:
+            return
+        data = data.decode('utf-8').split('\n')
+        labels = {'device': iface}
+        for line in data:
+            # drop empty lines and the header
+            if not line or line.startswith('Settings for '):
+                continue
+            # drop lines without : - continuation of previous line
+            if ':' not in line:
+                continue
+            line = line.strip()
+            linesplit = line.split(': ')
+            if len(linesplit) < 2:
+                print(linesplit)
+            key, value = line.split(': ')
+            key = key.strip().replace(' ', '_').lower()
+            if key not in self.basic_info_whitelist:
+                continue
+            # special handling for special values
+            try:
+                if key == 'speed':
+                    if value.endswith('Kb/s'):
+                        val = float(value.split('Mb/s')[0]) * 1000
+                    elif value.endswith('Mb/s'):
+                        val = float(value.split('Mb/s')[0]) * 1000000
+                    elif value.endswith('Gb/s'):
+                        val = float(value.split('Mb/s')[0]) * 1000000000
+                    elif value == 'Unknown!':
+                        val = 0
+                    else:
+                        val = float(value)
+                    value = str(val)
+            except ValueError:
+                logging.warning('Failed parsing "{}"'.format(line))
+                continue
+            labels[key] = value
+        info.add_metric(labels.values(), labels)
+
+    def add_split(self, sensors, key, value):
+        """Helper method to split values like '10.094 mA'"""
+        val, unit = value.split(' ')
+        labels = {
+                'device': device,
+                'type': key + '_' + unit,
+                }
+        sensors.add_metric(labels=labels, value=float(value))
+
+    def update_xcvr_info(self, iface, info, sensors, alarms):
+        """Update transceiver metrics with info from ethtool."""
+        data = self.run_ethtool(iface, '-m', quiet=True)
+        if not data:
+            # This usually happens when transceiver is missing
+            logging.info('Cannot get transceiver data for ' + iface)
+            return
+        data = data.decode('utf-8').split('\n')
+        info_labels = {'device': iface}
+        for line in data:
+            # drop empty lines and the header
+            if not line or line.startswith('Settings for '):
+                continue
+            # drop lines without : - continuation of previous line
+            if ':' not in line:
+                continue
+            line = line.strip()
+            key, value = line.split(': ', 1)
+            key = key.strip().replace(' ', '_').replace('(', '').replace(')', '').lower()
+            value = value.strip()
+            if key in self.xcvr_info_whitelist:
+                info_labels[key] = value
+            elif key in self.xcvr_sensors_whitelist:
+                if key == 'laser_bias_current' or key=='module_voltage':
+                    self.add_split(sensors, device, key, value)
+                elif key=='laser_output_power' or key=='receiver_signal_average_optical_power' or key=='module_temperature':
+                    for val in value.split(' / '):
+                        self.add_split(sensors, device, key, val)
+            elif key in self.xcvr_alarms_whitelist:
+                if value == 'Off':
+                    continue
+                labels = {
+                        'device': device,
+                        'type': key,
+                        'value': value,
+                        }
+                alarms.add_metric(labels=labels, value=1.0)
+        info.add_metric(info_labels.values(), info_labels)
+
     def collect(self):
         """
         Collect the metrics.
@@ -192,8 +360,24 @@ class EthtoolCollector(object):
         """
         gauge = GaugeMetricFamily(
             'node_net_ethtool', 'Ethtool data', labels=['device', 'type'])
+        basic_info = InfoMetricFamily(
+            'node_net_ethtool', 'Ethtool device information',
+            labels=['device'])
+        xcvr_info = InfoMetricFamily(
+            'node_net_ethtool_xcvr', 'Ethtool device transceiver information',
+            labels=['device'])
+        sensors = GaugeMetricFamily(
+            'node_net_ethtool_xcvr_sensors', 'Ethtool transceiver sensors', labels=['device', 'type'])
+        alarms = GaugeMetricFamily(
+            'node_net_ethtool_xcvr_alarms', 'Ethtool transceiver sensor alarms', labels=['device', 'type'])
         for iface in self.find_physical_interfaces():
             self.update_ethtool_stats(iface, gauge)
+            self.update_basic_info(iface, basic_info)
+            self.update_xcvr_info(iface, xcvr_info, sensors, alarms)
+        yield basic_info
+        yield xcvr_info
+        yield sensors
+        yield alarms
         yield gauge
 
     def find_physical_interfaces(self):
