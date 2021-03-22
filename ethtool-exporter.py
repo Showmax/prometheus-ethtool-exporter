@@ -184,7 +184,7 @@ class EthtoolCollector(object):
             logging.error('Interval has to be used with textfile mode')
             parser.print_help()
             sys.exit(1)
-        if arguments.listen_address and not arguments.port:
+        if arguments.listen_address and not arguments.port and not arguments.textfile_name:
             logging.error('Listen address has to be used with a listen port')
             parser.print_help()
             sys.exit(1)
@@ -333,9 +333,9 @@ class EthtoolCollector(object):
             if key in self.xcvr_info_whitelist:
                 info_labels[key] = value
             elif key in self.xcvr_sensors_whitelist:
-                if key == 'laser_bias_current' or key=='module_voltage':
+                if key == 'laser_bias_current' or key == 'module_voltage':
                     self.add_split(sensors, iface, key, value)
-                elif key=='laser_output_power' or key=='receiver_signal_average_optical_power' or key=='module_temperature':
+                elif key == 'laser_output_power' or key == 'receiver_signal_average_optical_power' or key == 'module_temperature':
                     for val in value.split(' / '):
                         self.add_split(sensors, iface, key, val)
             elif key in self.xcvr_alarms_whitelist:
