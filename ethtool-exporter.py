@@ -330,7 +330,8 @@ class EthtoolCollector(object):
                 continue
             line = line.strip()
             key, value = line.split(': ', 1)
-            key = key.strip().replace(' ', '_').replace('(', '').replace(')', '').lower()
+            key = key.strip().replace(' ', '_').replace('(', '').replace(')', '')
+            key = key.replace(',', '_').replace('.', '_').lower()
             value = value.strip()
             if key in self.xcvr_info_whitelist:
                 info_labels[key] = value
