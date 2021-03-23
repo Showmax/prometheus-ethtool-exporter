@@ -35,10 +35,10 @@ class EthtoolCollector(object):
                 'extended_identifier',
                 'connector',
                 'transceiver_type',
-                'length_smf,km',
+                'length_smf_km',
                 'length_smf',
                 'length_50um',
-                'length_62.5um',
+                'length_62_5um',
                 'length_copper',
                 'length_om3',
                 'laser_wavelength',
@@ -307,6 +307,8 @@ class EthtoolCollector(object):
         """Helper method to split values like '10.094 mA'"""
         val, unit = value.split(' ', 1)
         unit = unit.replace(' ', '_')
+        unit = unit.replace('.', '_')
+        unit = unit.replace(',', '_')
         labels = [iface, key + '_' + unit]
         sensors.add_metric(labels=labels, value=float(val))
 
