@@ -349,7 +349,7 @@ class EthtoolCollector(object):
                         'type': key,
                         'value': value,
                         }
-                alarms.add_metric(labels=labels, value=1.0)
+                alarms.add_metric(labels=labels.values(), value=1.0)
         info.add_metric(info_labels.values(), info_labels)
 
     def collect(self):
