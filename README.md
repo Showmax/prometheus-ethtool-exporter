@@ -38,6 +38,7 @@ optional arguments:
   -1, --oneshot         Run only once and exit. Useful for running in a
                         cronjob
   -q, --quiet           Silence any error messages and warnings
+  --debug               Set logging level to DEBUG and see more log lines.
   -w WHITELIST_REGEX, --whitelist-regex WHITELIST_REGEX
                         Only include values whose name matches this regex. -w
                         and -b are mutually exclusive

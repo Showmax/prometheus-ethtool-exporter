@@ -1,358 +1,426 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Collect ethtool metrics,publish them via http or save them to a file."""
-import argparse
-from http.server import HTTPServer
-import logging
-import os
 import re
-import socket
-import socketserver
-import subprocess
-import sys
-import time
-
+from argparse import ArgumentParser, Namespace
 from distutils.spawn import find_executable
+from logging import CRITICAL, DEBUG, INFO, Logger, basicConfig, getLogger
+from os import environ
+from pathlib import Path
+from subprocess import PIPE, Popen
+from sys import argv, exit
+from time import sleep
+from typing import Iterator, Optional, Union
 
-import prometheus_client
+from prometheus_client import CollectorRegistry, start_http_server, write_to_textfile
 from prometheus_client.core import GaugeMetricFamily, InfoMetricFamily
 
 
-class EthtoolCollector(object):
+class EthtoolCollector:
     """Collect ethtool metrics,publish them via http or save them to a file."""
 
-    def __init__(self, args=None):
+    def __init__(self, args: Optional[list[str]] = None):
         """Construct the object and parse the arguments."""
-        self.args = None
         self.ethtool = None
         self.basic_info_whitelist = [
-                'speed',
-                'duplex',
-                'port',
-                'link_detected',
-                ]
+            "speed",
+            "duplex",
+            "port",
+            "link_detected",
+        ]
         self.xcvr_info_whitelist = [
-                'identifier',
-                'extended_identifier',
-                'connector',
-                'transceiver_type',
-                'length_smf_km',
-                'length_smf',
-                'length_50um',
-                'length_62_5um',
-                'length_copper',
-                'length_om3',
-                'laser_wavelength',
-                'vendor_name',
-                'vendor_oui',
-                'vendor_pn',
-                'vendor_rev',
-                'vendor_sn',
-                'laser_bias_current_high_alarm_threshold',
-                'laser_bias_current_low_alarm_threshold',
-                'laser_bias_current_high_warning_threshold',
-                'laser_bias_current_low_warning_threshold',
-                'laser_output_power_high_alarm_threshold',
-                'laser_output_power_low_alarm_threshold',
-                'laser_output_power_high_warning_threshold',
-                'laser_output_power_low_warning_threshold',
-                'module_temperature_high_alarm_threshold',
-                'module_temperature_low_alarm_threshold',
-                'module_temperature_high_warning_threshold',
-                'module_temperature_low_warning_threshold',
-                'module_voltage_high_alarm_threshold',
-                'module_voltage_low_alarm_threshold',
-                'module_voltage_high_warning_threshold',
-                'module_voltage_low_warning_threshold',
-                'laser_rx_power_high_alarm_threshold',
-                'laser_rx_power_low_alarm_threshold',
-                'laser_rx_power_high_warning_threshold',
-                'laser_rx_power_low_warning_threshold',
-                ]
+            "identifier",
+            "extended_identifier",
+            "connector",
+            "transceiver_type",
+            "length_smf_km",
+            "length_smf",
+            "length_50um",
+            "length_62_5um",
+            "length_copper",
+            "length_om3",
+            "laser_wavelength",
+            "vendor_name",
+            "vendor_oui",
+            "vendor_pn",
+            "vendor_rev",
+            "vendor_sn",
+            "laser_bias_current_high_alarm_threshold",
+            "laser_bias_current_low_alarm_threshold",
+            "laser_bias_current_high_warning_threshold",
+            "laser_bias_current_low_warning_threshold",
+            "laser_output_power_high_alarm_threshold",
+            "laser_output_power_low_alarm_threshold",
+            "laser_output_power_high_warning_threshold",
+            "laser_output_power_low_warning_threshold",
+            "module_temperature_high_alarm_threshold",
+            "module_temperature_low_alarm_threshold",
+            "module_temperature_high_warning_threshold",
+            "module_temperature_low_warning_threshold",
+            "module_voltage_high_alarm_threshold",
+            "module_voltage_low_alarm_threshold",
+            "module_voltage_high_warning_threshold",
+            "module_voltage_low_warning_threshold",
+            "laser_rx_power_high_alarm_threshold",
+            "laser_rx_power_low_alarm_threshold",
+            "laser_rx_power_high_warning_threshold",
+            "laser_rx_power_low_warning_threshold",
+        ]
         self.xcvr_sensors_whitelist = [
-                'laser_bias_current',
-                'laser_output_power',
-                'receiver_signal_average_optical_power',
-                'module_temperature',
-                'module_voltage',
-                ]
+            "laser_bias_current",
+            "laser_output_power",
+            "receiver_signal_average_optical_power",
+            "module_temperature",
+            "module_voltage",
+        ]
         self.xcvr_alarms_base = [
-                'laser_bias_current',
-                'laser_output_power',
-                'module_temperature',
-                'module_voltage',
-                'laser_rx_power',
-                ]
-        self.xcvr_alamrs_ext = [
-                '_high_alarm',
-                '_low_alarm',
-                '_high_warning',
-                '_low_warning',
-                ]
+            "laser_bias_current",
+            "laser_output_power",
+            "module_temperature",
+            "module_voltage",
+            "laser_rx_power",
+        ]
+        self.xcvr_alarms_ext = [
+            "_high_alarm",
+            "_low_alarm",
+            "_high_warning",
+            "_low_warning",
+        ]
         # Cartesian product of the two lists above
-        self.xcvr_alarms_whitelist = [i+j for i in self.xcvr_alarms_base for j in self.xcvr_alamrs_ext]
+        self.xcvr_alarms_whitelist = [
+            i + j for i in self.xcvr_alarms_base for j in self.xcvr_alarms_ext
+        ]
+        self.args: Namespace = self._parse_arguments(args or argv[1:])
+        self.logger = self._setup_logger()
 
-        if not args:
-            args = sys.argv[1:]
-        self._parse_args(args)
+    def _setup_logger(self) -> Logger:
+        """Setup a logger for exporter.
 
-    def _parse_args(self, args):
-        """Parse CLI args and set them to self.args."""
-        parser = argparse.ArgumentParser()
+        :return: Logger instance.
+        """
+        log_level = DEBUG if self.args.debug else INFO
+        if self.args.quiet:
+            log_level = CRITICAL
+
+        basicConfig(level=log_level)
+        return getLogger("ethtool-collector")
+
+    def _parse_arguments(self, arguments: list[str]) -> Namespace:
+        """Parse CLI args.
+
+        :param arguments: Args from override or CLI to be parsed into Namespace.
+        :return: Parsed args.
+        """
+        parser = ArgumentParser()
         group = parser.add_mutually_exclusive_group(required=True)
         group.add_argument(
-            '-f',
-            '--textfile-name',
-            dest='textfile_name',
-            help=('Full file path where to store data for node '
-                  'collector to pick up')
+            "-f",
+            "--textfile-name",
+            help="Full file path where to store data for node collector to pick up",
         )
         group.add_argument(
-            '-l',
-            '--listen',
-            dest='listen',
-            help=('OBSOLETE. Use -L/-p instead. '
-                  'Listen host:port, i.e. 0.0.0.0:9417')
+            "-l",
+            "--listen",
+            help="OBSOLETE. Use -L/-p instead. Listen host:port, i.e. 0.0.0.0:9417",
         )
         group.add_argument(
-            '-p',
-            '--port',
-            dest='port',
+            "-p", "--port", type=int, help="Port to listen on, i.e. 9417"
+        )
+        parser.add_argument(
+            "-L", "--listen-address", default="0.0.0.0", help="IP address to listen on"
+        )
+        parser.add_argument(
+            "-i",
+            "--interval",
             type=int,
-            help='Port to listen on, i.e. 9417'
+            help=(
+                "Number of seconds between updates of the textfile. "
+                "Default is 5 seconds"
+            ),
         )
         parser.add_argument(
-            '-L',
-            '--listen-address',
-            dest='listen_address',
-            default='0.0.0.0',
-            help='IP address to listen on'
+            "-I",
+            "--interface-regex",
+            default=".*",
+            help="Only scrape interfaces whose name matches this regex",
         )
         parser.add_argument(
-            '-i',
-            '--interval',
-            dest='interval',
-            type=int,
-            help=('Number of seconds between updates of the textfile. '
-                  'Default is 5 seconds')
-        )
-        parser.add_argument(
-            '-I',
-            '--interface-regex',
-            dest='interface_regex',
-            default='.*',
-            help='Only scrape interfaces whose name matches this regex'
-        )
-        parser.add_argument(
-            '-1',
-            '--oneshot',
-            dest='oneshot',
-            action='store_true',
+            "-1",
+            "--oneshot",
+            action="store_true",
             default=False,
-            help='Run only once and exit. Useful for running in a cronjob'
+            help="Run only once and exit. Useful for running in a cronjob",
         )
         parser.add_argument(
-            '-q',
-            '--quiet',
-            dest='quiet',
-            action='store_true',
+            "--debug",
+            action="store_true",
             default=False,
-            help='Silence any error messages and warnings'
+            help="Set logging level to DEBUG and see more.",
         )
-        wblistgroup = parser.add_mutually_exclusive_group()
-        wblistgroup.add_argument(
-            '-w',
-            '--whitelist-regex',
-            dest='whitelist_regex',
-            help=('Only include values whose name matches this regex. '
-                  '-w and -b are mutually exclusive')
+        parser.add_argument(
+            "-q",
+            "--quiet",
+            action="store_true",
+            default=False,
+            help="Silence any error messages and warnings",
         )
-        wblistgroup.add_argument(
-            '-b',
-            '--blacklist-regex',
-            dest='blacklist_regex',
-            help=('Exclude values whose name matches this regex. '
-                  '-w and -b are mutually exclusive')
+        wb_list_group = parser.add_mutually_exclusive_group()
+        wb_list_group.add_argument(
+            "-w",
+            "--whitelist-regex",
+            help=(
+                "Only include values whose name matches this regex. "
+                "-w and -b are mutually exclusive"
+            ),
         )
-        arguments = parser.parse_args(args)
-        if arguments.quiet:
-            logging.getLogger().setLevel(100)
-        if arguments.oneshot and not arguments.textfile_name:
-            logging.error('Oneshot has to be used with textfile mode')
-            parser.print_help()
-            sys.exit(1)
-        if arguments.interval and not arguments.textfile_name:
-            logging.error('Interval has to be used with textfile mode')
-            parser.print_help()
-            sys.exit(1)
-        if arguments.listen_address and not arguments.port and not arguments.textfile_name:
-            logging.error('Listen address has to be used with a listen port')
-            parser.print_help()
-            sys.exit(1)
-        if not arguments.interval:
-            arguments.interval = 5
-        self.args = vars(arguments)
+        wb_list_group.add_argument(
+            "-b",
+            "--blacklist-regex",
+            help=(
+                "Exclude values whose name matches this regex. "
+                "-w and -b are mutually exclusive"
+            ),
+        )
+        parsed_arguments = parser.parse_args(arguments)
+        self._check_parsed_arguments(parser, parsed_arguments)
+        # Set default value if none is set after validation.
+        if not parsed_arguments.interval:
+            parsed_arguments.interval = 5
+        return parsed_arguments
 
-    def whitelist_blacklist_check(self, stat_name):
-        """Check whether stat_name matches whitelist or blacklist."""
-        if self.args['whitelist_regex']:
-            if re.match(self.args['whitelist_regex'], stat_name):
-                return True
-            else:
-                return False
-        if self.args['blacklist_regex']:
-            if re.match(self.args['blacklist_regex'], stat_name):
-                return False
-            else:
-                return True
+    def _check_parsed_arguments(
+        self, parser: ArgumentParser, parsed_arguments: Namespace
+    ):
+        """CHeck if arguments have the required / allowed combinations of values.
+
+        :param parser: Used argument parser.
+        :param parsed_arguments: Parsed arguments using the argument parser.
+        """
+        if parsed_arguments.oneshot and not parsed_arguments.textfile_name:
+            self.logger.error("Oneshot has to be used with textfile mode")
+            parser.print_help()
+            exit(1)
+        if parsed_arguments.interval and not parsed_arguments.textfile_name:
+            self.logger.error("Interval has to be used with textfile mode")
+            parser.print_help()
+            exit(1)
+        if (
+            parsed_arguments.listen_address
+            and not parsed_arguments.port
+            and not parsed_arguments.textfile_name
+        ):
+            self.logger.error("Listen address has to be used with a listen port")
+            parser.print_help()
+            exit(1)
+
+    def whitelist_blacklist_check(self, stat_name: str) -> bool:
+        """Check whether stat_name matches whitelist or blacklist.
+
+        :param stat_name: Name of the statistic to be checked against lists.
+        :return: Bool if statistic is allowed.
+        """
+        if self.args.whitelist_regex:
+            return re.match(self.args.whitelist_regex, stat_name) is None
+        if self.args.blacklist_regex:
+            return re.match(self.args.blacklist_regex, stat_name) is not None
         return True
 
-    def run_ethtool(self, iface, parameter, quiet=False):
-        """Run ethtool with select parameter"""
+    def run_ethtool(self, interface: str, parameter: str) -> Optional[bytes]:
+        """Run ethtool with select parameter.
+
+        :param interface: Interface we want to make metrics from.
+        :param parameter: Additional params for running ethtool command.
+        """
+        command = [self.ethtool, interface]
         if parameter:
-            command = [self.ethtool, parameter, iface]
-        else:
-            command = [self.ethtool, iface]
+            command = [self.ethtool, parameter, interface]
         try:
-            proc = subprocess.Popen(command, stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
+            self.logger.debug(f"ethtool command: {command}")
+            proc = Popen(command, stdout=PIPE, stderr=PIPE)
         except FileNotFoundError:
-            logging.critical(self.ethtool + ' not found. Giving up')
-            sys.exit(1)
+            self.logger.critical(f"{self.ethtool} not found. Giving up")
+            exit(1)
         except PermissionError as e:
-            logging.critical('Permission error trying to run '
-                             + self.ethtool + ' : {}'.format(e))
-            sys.exit(1)
+            self.logger.critical(f"Permission error trying to run {self.ethtool}: {e}")
+            exit(1)
         data, err = proc.communicate()
         if proc.returncode != 0:
-            if not quiet:
-                logging.critical('Ethtool returned non-zero return '
-                                 'code for interface {}, the message'
-                                 'was: {}'.format(iface, err))
-            return False
+            self.logger.error(
+                "Ethtool returned non-zero return "
+                f"code for interface {interface}, the message "
+                f"was: {err}"
+            )
+            return None
         return data
 
-    def update_ethtool_stats(self, iface, gauge):
-        """Update gauge with statistics from ethtool for interface iface."""
-        data = self.run_ethtool(iface, '-S')
-        if not data:
+    def update_ethtool_stats(self, interface: str, gauge: GaugeMetricFamily):
+        """Update gauge with statistics from ethtool for interface interface.
+
+        :param interface: Interface we make metrics from.
+        :param gauge: Destination metric to put the data in.
+        """
+        if not (data := self.run_ethtool(interface, "-S")):
             return
-        data = data.decode('utf-8').split('\n')
         key_set = set()
-        for line in data:
-            # drop empty lines and the header
-            if not line or line == 'NIC statistics:':
-                continue
+        for line in data.decode("utf-8").split("\n"):
             line = line.strip()
-            try:
-                key, value = line.split(': ')
-                key = key.strip()
-                value = value.strip()
-                value = float(value)
-            except ValueError:
-                logging.warning('Failed parsing "{}"'.format(line))
+            # drop empty lines and the header
+            if not line or line == "NIC statistics:":
                 continue
+            try:
+                key, value = line.split(": ")
+                key = key.strip()
+                value = float(value.strip())
+            except ValueError:
+                self.logger.warning(f'Failed parsing "{line}"')
+                continue
+
             if not self.whitelist_blacklist_check(key):
                 continue
-            labels = [iface, key]
-            if key not in key_set:
-                gauge.add_metric(labels, value)
-                key_set.add(key)
-            else:
-                logging.warning('Item {} already seen, check the source '
-                                'data for interface {}'.format(key, iface))
 
-    def update_basic_info(self, iface, info):
-        """Update metric with info from ethtool for interface iface."""
-        data = self.run_ethtool(iface, '')
-        if not data:
+            if key not in key_set:
+                gauge.add_metric([interface, key], value)
+                key_set.add(key)
+
+            else:
+                self.logger.warning(
+                    f"Item {key} already seen, check the source data for "
+                    f"interface {interface}"
+                )
+
+    def update_basic_info(self, interface: str, info: InfoMetricFamily):
+        """Update metric with info from ethtool for interface interface.
+
+        :param interface: Interface we make metrics from.
+        :param info: Destination metric to put the data in.
+        """
+
+        if not (data := self.run_ethtool(interface, "")):
             return
-        data = data.decode('utf-8').split('\n')
-        labels = {'device': iface}
-        for line in data:
-            # drop empty lines and the header
-            if not line or line.startswith('Settings for '):
-                continue
+        labels = {"device": interface}
+        for line in data.decode("utf-8").split("\n"):
+            # drop empty lines
+            # drop line with the header
             # drop lines without : - continuation of previous line
-            if ':' not in line:
+            if not line or line.startswith("Settings for ") or ":" not in line:
                 continue
             line = line.strip()
-            linesplit = line.split(': ')
-            if len(linesplit) < 2:
-                print(linesplit)
-            key, value = line.split(': ')
-            key = key.strip().replace(' ', '_').lower()
+            key, value = line.split(": ")
+            key = key.strip().replace(" ", "_").lower()
             if key not in self.basic_info_whitelist:
                 continue
             # special handling for special values
             try:
-                if key == 'speed':
-                    if value.endswith('Kb/s'):
-                        val = float(value.split('Mb/s')[0]) * 1000
-                    elif value.endswith('Mb/s'):
-                        val = float(value.split('Mb/s')[0]) * 1000000
-                    elif value.endswith('Gb/s'):
-                        val = float(value.split('Mb/s')[0]) * 1000000000
-                    elif value == 'Unknown!':
-                        val = 0
-                    else:
-                        val = float(value)
-                    value = str(val)
+                if key == "speed":
+                    self._decode_speed_value(value)
             except ValueError:
-                logging.warning('Failed parsing "{}"'.format(line))
+                self.logger.warning(f'Failed parsing "{line}"')
                 continue
             labels[key] = value
         info.add_metric(labels.values(), labels)
 
-    def add_split(self, sensors, iface, key, value):
-        """Helper method to split values like '10.094 mA'"""
-        val, unit = value.split(' ', 1)
-        unit = unit.replace(' ', '_')
-        unit = unit.replace('.', '_')
-        unit = unit.replace(',', '_')
-        labels = [iface, key + '_' + unit]
+    @staticmethod
+    def _decode_speed_value(speed: str) -> str:
+        """Convert the speed string with units to a float.
+
+        :param speed: Speed value with unit.
+        :return: Only number (float) in string format.
+        """
+        speed_suffixes = ((1000, "Kb/s"), (1000000, "Mb/s"), (1000000000, "Gb/s"))
+        for speed_coefficient, suffix in speed_suffixes:
+            if speed.endswith(suffix):
+                return str(float(speed.split(suffix)[0]) * speed_coefficient)
+        if speed == "Unknown!":
+            return "0"
+        return speed
+
+    def add_split(
+        self,
+        sensors: GaugeMetricFamily,
+        interface: str,
+        metric_name: str,
+        metric_value: str,
+    ):
+        """Helper method to split values like '10.094 mA'
+
+        :param sensors: Destination metric to put the sensors data in.
+        :param interface: Interface we make metrics from.
+        :param metric_name: Name of the statistic we will parse to metric.
+        :param metric_value: Value of the statistic we will parse to metric.
+        """
+        val, unit = metric_value.split(" ", 1)
+        unit = self._remove_separators(unit)
+        labels = [interface, f"{metric_name}_{unit}"]
         sensors.add_metric(labels=labels, value=float(val))
 
-    def update_xcvr_info(self, iface, info, sensors, alarms):
-        """Update transceiver metrics with info from ethtool."""
-        data = self.run_ethtool(iface, '-m', quiet=True)
-        if not data:
+    @staticmethod
+    def _remove_separators(value: str) -> str:
+        """Remove the separators from string.
+
+        :param value: Input string to be processed.
+        :return: Processed string without separators.
+        """
+        return value.strip().replace(",", "_").replace(".", "_").replace(" ", "_")
+
+    def update_xcvr_info(
+        self,
+        interface: str,
+        info: InfoMetricFamily,
+        sensors: GaugeMetricFamily,
+        alarms: GaugeMetricFamily,
+    ):
+        """Update transceiver metrics with info from ethtool.
+
+        :param interface: Interface we make metrics from.
+        :param info: Destination metric to put the info data in.
+        :param sensors: Destination metric to put the sensors data in.
+        :param alarms: Destination metric to put the alarms data in.
+        """
+        if not (data := self.run_ethtool(interface, "-m")):
             # This usually happens when transceiver is missing
-            logging.info('Cannot get transceiver data for ' + iface)
+            self.logger.info("Cannot get transceiver data for " + interface)
             return
-        data = data.decode('utf-8').split('\n')
-        info_labels = {'device': iface}
+        data = data.decode("utf-8").split("\n")
+        info_labels = {"device": interface}
         for line in data:
-            # drop empty lines and the header
-            if not line or line.startswith('Settings for '):
-                continue
+            # drop empty lines
+            # drop the header
             # drop lines without : - continuation of previous line
-            if ':' not in line:
+            if not line or line.startswith("Settings for ") or ":" not in line:
                 continue
+
             line = line.strip()
-            key, value = line.split(': ', 1)
-            key = key.strip().replace(' ', '_').replace('(', '').replace(')', '')
-            key = key.replace(',', '_').replace('.', '_').lower()
+            key, value = line.split(": ", 1)
+            key = self._remove_separators(key)
+            key = key.replace("(", "").replace(")", "").lower()
             value = value.strip()
+
             if key in self.xcvr_info_whitelist:
                 info_labels[key] = value
+
             elif key in self.xcvr_sensors_whitelist:
-                if key == 'laser_bias_current' or key == 'module_voltage':
-                    self.add_split(sensors, iface, key, value)
-                elif key == 'laser_output_power' or key == 'receiver_signal_average_optical_power' or key == 'module_temperature':
-                    for val in value.split(' / '):
-                        self.add_split(sensors, iface, key, val)
+                if key == "laser_bias_current" or key == "module_voltage":
+                    self.add_split(sensors, interface, key, value)
+
+                elif (
+                    key == "laser_output_power"
+                    or key == "receiver_signal_average_optical_power"
+                    or key == "module_temperature"
+                ):
+                    for val in value.split(" / "):
+                        self.add_split(sensors, interface, key, val)
+
             elif key in self.xcvr_alarms_whitelist:
-                if value == 'Off':
+                if value == "Off":
                     continue
                 labels = {
-                        'device': iface,
-                        'type': key,
-                        'value': value,
-                        }
+                    "device": interface,
+                    "type": key,
+                    "value": value,
+                }
                 alarms.add_metric(labels=labels.values(), value=1.0)
         info.add_metric(info_labels.values(), info_labels)
 
-    def collect(self):
+    def collect(self) -> Iterator[Union[InfoMetricFamily, GaugeMetricFamily]]:
         """
         Collect the metrics.
 
@@ -360,79 +428,87 @@ class EthtoolCollector(object):
         uses this method to respond to http queries or save them to disk.
         """
         gauge = GaugeMetricFamily(
-            'node_net_ethtool', 'Ethtool data', labels=['device', 'type'])
+            "node_net_ethtool", "Ethtool data", labels=["device", "type"]
+        )
         basic_info = InfoMetricFamily(
-            'node_net_ethtool', 'Ethtool device information',
-            labels=['device'])
+            "node_net_ethtool", "Ethtool device information", labels=["device"]
+        )
         xcvr_info = InfoMetricFamily(
-            'node_net_ethtool_xcvr', 'Ethtool device transceiver information',
-            labels=['device'])
+            "node_net_ethtool_xcvr",
+            "Ethtool device transceiver information",
+            labels=["device"],
+        )
         sensors = GaugeMetricFamily(
-            'node_net_ethtool_xcvr_sensors', 'Ethtool transceiver sensors', labels=['device', 'type'])
+            "node_net_ethtool_xcvr_sensors",
+            "Ethtool transceiver sensors",
+            labels=["device", "type"],
+        )
         alarms = GaugeMetricFamily(
-            'node_net_ethtool_xcvr_alarms', 'Ethtool transceiver sensor alarms', labels=['device', 'type'])
-        for iface in self.find_physical_interfaces():
-            self.update_ethtool_stats(iface, gauge)
-            self.update_basic_info(iface, basic_info)
-            self.update_xcvr_info(iface, xcvr_info, sensors, alarms)
+            "node_net_ethtool_xcvr_alarms",
+            "Ethtool transceiver sensor alarms",
+            labels=["device", "type"],
+        )
+        for interface in self.find_physical_interfaces():
+            self.update_ethtool_stats(interface, gauge)
+            self.update_basic_info(interface, basic_info)
+            self.update_xcvr_info(interface, xcvr_info, sensors, alarms)
         yield basic_info
         yield xcvr_info
         yield sensors
         yield alarms
         yield gauge
 
-    def find_physical_interfaces(self):
+    def find_physical_interfaces(self) -> list[str]:
         """Find physical interfaces and optionally filter them."""
         # https://serverfault.com/a/833577/393474
-        root = '/sys/class/net'
-        for file in os.listdir(root):
-            path = os.path.join(root, file)
-            if os.path.islink(path) and 'virtual' not in os.readlink(path):
-                if re.match(self.args['interface_regex'], file):
-                    yield file
+        return [
+            file.name
+            for file in Path("/sys/class/net").iterdir()
+            if (
+                file.is_symlink()
+                and "virtual" not in str(file.readlink().resolve())
+                and re.match(self.args.interface_regex, str(file.resolve()))
+            )
+        ]
 
 
-class IPv6HTTPServer(HTTPServer):
-    address_family = socket.AF_INET6
-
-
-if __name__ == '__main__':
-    path = os.getenv("PATH", "")
-    path = os.pathsep.join([path, "/usr/sbin", "/sbin"])
-    ethtool = find_executable("ethtool", path)
-    if ethtool is None:
-        sys.exit("Error: cannot find ethtool.")
-
+if __name__ == "__main__":
+    path = ":".join([environ.get("PATH", ""), "/usr/sbin", "/sbin"])
+    # Try to find the executable of ethtool.
+    if (ethtool := find_executable("ethtool", path)) is None:
+        exit("Error: cannot find ethtool.")
+    # Create new instance of EthtoolCollector.
     collector = EthtoolCollector()
     collector.ethtool = ethtool
-    registry = prometheus_client.CollectorRegistry()
+    collector.logger.debug("Starting ethtool-collector")
+    # Create registry for metrics and assign collector.
+    registry = CollectorRegistry()
     registry.register(collector)
-    EthtoolMetricsHandler = prometheus_client.MetricsHandler.factory(registry)
-    args = collector.args
-    if args['listen'] or args['port']:
-        if args['listen']:
-            logging.warning('You are using obsolete argument -l.'
-                            'Please switch to -L and -p')
-            ip, port = args['listen'].rsplit(':', 1)
+
+    # If arguments passed for exposing metrics on port we use them.
+    if collector.args.listen or collector.args.port:
+        if collector.args.listen:
+            collector.logger.warning(
+                "You are using obsolete argument -l. Please switch to -L and -p"
+            )
+            ip, port = collector.args.listen.rsplit(":", 1)
         else:
-            ip = args['listen_address']
-            port = args['port']
+            ip = collector.args.listen_address
+            port = collector.args.port
         # Remove optional IPv6 braces if present, i.e. [::1] => ::1
-        ip = ip.replace('[', '').replace(']', '')
-        port = int(port)
-        if ':' in ip:
-            server_class = IPv6HTTPServer
-        else:
-            server_class = HTTPServer
-        httpd = server_class((ip, port), EthtoolMetricsHandler)
-        httpd.serve_forever()
+        ip = ip.replace("[", "").replace("]", "")
+        collector.logger.debug(f"Serving metrics on {ip}:{port}")
+        # Expose metrics on port and ip.
+        start_http_server(port, ip, registry=registry)
         while True:
-            time.sleep(3600)
-    if args['textfile_name']:
+            sleep(collector.args.interval)
+
+    # If arguments for serving to file are present we use them.
+    if collector.args.textfile_name:
+        collector.logger.debug(f"Putting metrics into {collector.args.textfile_name}")
         while True:
             collector.collect()
-            prometheus_client.write_to_textfile(args['textfile_name'],
-                                                registry)
-            if collector.args['oneshot']:
-                sys.exit(0)
-            time.sleep(args['interval'])
+            write_to_textfile(collector.args.textfile_name, registry)
+            if collector.args.oneshot:
+                exit(0)
+            sleep(collector.args.interval)

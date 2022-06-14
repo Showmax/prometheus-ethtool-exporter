@@ -1,1 +1,1 @@
-prometheus_client==0.5.0 --hash=sha256:e8c11ff5ca53de6c3d91e1510500611cafd1d247a937ec6c588a0a7cc3bef93c
+prometheus_client==0.14.1 --hash=sha256:5459c427624961076277fdc6dc50540e2bacb98eebde99886e59ec55ed92093a
