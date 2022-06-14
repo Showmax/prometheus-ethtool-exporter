@@ -20,14 +20,13 @@ class EthtoolCollector:
 
     def __init__(self, args: Optional[list[str]] = None):
         """Construct the object and parse the arguments."""
-        self.ethtool = None
-        self.basic_info_whitelist = [
+        self.basic_info_whitelist = (
             "speed",
             "duplex",
             "port",
             "link_detected",
-        ]
-        self.xcvr_info_whitelist = [
+        )
+        self.xcvr_info_whitelist = (
             "identifier",
             "extended_identifier",
             "connector",
@@ -64,33 +63,36 @@ class EthtoolCollector:
             "laser_rx_power_low_alarm_threshold",
             "laser_rx_power_high_warning_threshold",
             "laser_rx_power_low_warning_threshold",
-        ]
-        self.xcvr_sensors_whitelist = [
+        )
+        self.xcvr_sensors_whitelist = (
             "laser_bias_current",
             "laser_output_power",
             "receiver_signal_average_optical_power",
             "module_temperature",
             "module_voltage",
-        ]
-        self.xcvr_alarms_base = [
+        )
+        self.xcvr_alarms_base = (
             "laser_bias_current",
             "laser_output_power",
             "module_temperature",
             "module_voltage",
             "laser_rx_power",
-        ]
-        self.xcvr_alarms_ext = [
+        )
+        self.xcvr_alarms_ext = (
             "_high_alarm",
             "_low_alarm",
             "_high_warning",
             "_low_warning",
-        ]
+        )
         # Cartesian product of the two lists above
         self.xcvr_alarms_whitelist = [
-            i + j for i in self.xcvr_alarms_base for j in self.xcvr_alarms_ext
+            f"{base}{alarm}"
+            for base in self.xcvr_alarms_base
+            for alarm in self.xcvr_alarms_ext
         ]
+        self.ethtool: str = ""
         self.args: Namespace = self._parse_arguments(args or argv[1:])
-        self.logger = self._setup_logger()
+        self.logger: Logger = self._setup_logger()
 
     def _setup_logger(self) -> Logger:
         """Setup a logger for exporter.
@@ -261,7 +263,7 @@ class EthtoolCollector:
         if not (data := self.run_ethtool(interface, "-S")):
             return
         key_set = set()
-        for line in data.decode("utf-8").split("\n"):
+        for line in data.decode("utf-8").splitlines():
             line = line.strip()
             # drop empty lines and the header
             if not line or line == "NIC statistics:":
@@ -293,17 +295,18 @@ class EthtoolCollector:
         :param interface: Interface we make metrics from.
         :param info: Destination metric to put the data in.
         """
-
         if not (data := self.run_ethtool(interface, "")):
             return
+
         labels = {"device": interface}
-        for line in data.decode("utf-8").split("\n"):
+        for line in data.decode("utf-8").splitlines():
+            line = line.strip()
             # drop empty lines
             # drop line with the header
             # drop lines without : - continuation of previous line
             if not line or line.startswith("Settings for ") or ":" not in line:
                 continue
-            line = line.strip()
+
             key, value = line.split(": ")
             key = key.strip().replace(" ", "_").lower()
             if key not in self.basic_info_whitelist:
@@ -377,18 +380,18 @@ class EthtoolCollector:
         """
         if not (data := self.run_ethtool(interface, "-m")):
             # This usually happens when transceiver is missing
-            self.logger.info("Cannot get transceiver data for " + interface)
+            self.logger.info(f"Cannot get transceiver data for {interface}")
             return
-        data = data.decode("utf-8").split("\n")
+
         info_labels = {"device": interface}
-        for line in data:
+        for line in data.decode("utf-8").splitlines():
+            line = line.strip()
             # drop empty lines
             # drop the header
             # drop lines without : - continuation of previous line
             if not line or line.startswith("Settings for ") or ":" not in line:
                 continue
 
-            line = line.strip()
             key, value = line.split(": ", 1)
             key = self._remove_separators(key)
             key = key.replace("(", "").replace(")", "").lower()
@@ -398,13 +401,13 @@ class EthtoolCollector:
                 info_labels[key] = value
 
             elif key in self.xcvr_sensors_whitelist:
-                if key == "laser_bias_current" or key == "module_voltage":
+                if key in ("module_voltage", "laser_bias_current"):
                     self.add_split(sensors, interface, key, value)
 
-                elif (
-                    key == "laser_output_power"
-                    or key == "receiver_signal_average_optical_power"
-                    or key == "module_temperature"
+                elif key in (
+                    "laser_output_power",
+                    "receiver_signal_average_optical_power",
+                    "module_temperature",
                 ):
                     for val in value.split(" / "):
                         self.add_split(sensors, interface, key, val)
