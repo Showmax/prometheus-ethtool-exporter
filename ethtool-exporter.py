@@ -255,7 +255,7 @@ class EthtoolCollector:
         return data
 
     def update_ethtool_stats(self, interface: str, gauge: GaugeMetricFamily):
-        """Update gauge with statistics from ethtool for interface interface.
+        """Update gauge with statistics from ethtool for interface.
 
         :param interface: Interface we make metrics from.
         :param gauge: Destination metric to put the data in.
