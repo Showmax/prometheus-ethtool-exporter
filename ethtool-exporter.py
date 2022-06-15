@@ -221,9 +221,9 @@ class EthtoolCollector:
         :return: Bool if statistic is allowed.
         """
         if self.args.whitelist_regex:
-            return re.match(self.args.whitelist_regex, stat_name) is None
+            return re.match(self.args.whitelist_regex, stat_name) is not None
         if self.args.blacklist_regex:
-            return re.match(self.args.blacklist_regex, stat_name) is not None
+            return re.match(self.args.blacklist_regex, stat_name) is None
         return True
 
     def run_ethtool(self, interface: str, parameter: str) -> Optional[bytes]:
@@ -470,7 +470,7 @@ class EthtoolCollector:
             if (
                 file.is_symlink()
                 and "virtual" not in str(file.readlink().resolve())
-                and re.match(self.args.interface_regex, str(file.resolve()))
+                and re.match(self.args.interface_regex, file.name)
             )
         ]
 
