@@ -314,9 +314,9 @@ class EthtoolCollector:
             # special handling for special values
             try:
                 if key == "speed":
-                    self._decode_speed_value(value)
+                    value = self._decode_speed_value(value)
             except ValueError:
-                self.logger.warning(f'Failed parsing "{line}"')
+                self.logger.warning(f'Failed to parse speed in: "{line}"')
                 continue
             labels[key] = value
         info.add_metric(labels.values(), labels)
