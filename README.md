@@ -10,8 +10,10 @@ daemon.
 You can either use this as a standalone exporter that listens on an HTTP port, or use it to save data
 on disk in a .prom file either periodically or just once, and run it from cron or something similar.
 
-Warning: since 0.3.0, the code relies on Python3 specific code. If you need to use Python2, use
-the 0.2.6 version.
+**_WARNING_**: Since version 0.5.0 Python 3.9+ is required.
+
+**_WARNING_**: Since version 0.3.0 Python 3.0+ is required. If you need to use Python2, use the 0.2.6 version.
+
 # Usage
 ```
 usage: ethtool-exporter.py [-h] (-f TEXTFILE_NAME | -l LISTEN | -p PORT)
@@ -38,6 +40,7 @@ optional arguments:
   -1, --oneshot         Run only once and exit. Useful for running in a
                         cronjob
   -q, --quiet           Silence any error messages and warnings
+  --debug               Set logging level to DEBUG and see more log lines.
   -w WHITELIST_REGEX, --whitelist-regex WHITELIST_REGEX
                         Only include values whose name matches this regex. -w
                         and -b are mutually exclusive
