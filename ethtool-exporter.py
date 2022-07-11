@@ -269,7 +269,10 @@ class EthtoolCollector:
             if not line or line == "NIC statistics:":
                 continue
             try:
-                key, value = line.split(": ")
+                if not (key_val := self._parse_key_value_line(line)):
+                    continue
+
+                key, value = key_val
                 key = key.strip()
                 value = float(value.strip())
             except ValueError:
@@ -307,7 +310,10 @@ class EthtoolCollector:
             if not line or line.startswith("Settings for ") or ":" not in line:
                 continue
 
-            key, value = line.split(": ")
+            if not (key_val := self._parse_key_value_line(line)):
+                continue
+
+            key, value = key_val
             key = key.strip().replace(" ", "_").lower()
             if key not in self.basic_info_whitelist:
                 continue
@@ -320,6 +326,17 @@ class EthtoolCollector:
                 continue
             labels[key] = value
         info.add_metric(labels.values(), labels)
+
+    def _parse_key_value_line(self, line) -> Optional[list[str, str]]:
+        """Parse key: value from line if possible.
+
+        :param line: Line to be parsed for key value.
+        :return: Parsed key and value from line if parsing was successful.
+        """
+        if (spliced := line.split(": ", 1)) and len(spliced) == 2:
+            return spliced
+        self.logger.debug(f"Failed to parse key and value from line: {line}")
+        return None
 
     @staticmethod
     def _decode_speed_value(speed: str) -> str:
@@ -392,7 +409,10 @@ class EthtoolCollector:
             if not line or line.startswith("Settings for ") or ":" not in line:
                 continue
 
-            key, value = line.split(": ", 1)
+            if not (key_val := self._parse_key_value_line(line)):
+                continue
+
+            key, value = key_val
             key = self._remove_separators(key)
             key = key.replace("(", "").replace(")", "").lower()
             value = value.strip()
