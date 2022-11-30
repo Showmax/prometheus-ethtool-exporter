@@ -1,6 +1,6 @@
 ---
 # based on example https://github.com/coreos/prometheus-operator/blob/master/contrib/kube-prometheus/manifests/node-exporter-daemonset.yaml
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: ethtool-exporter
