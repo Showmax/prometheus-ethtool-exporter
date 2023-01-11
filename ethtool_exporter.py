@@ -15,6 +15,10 @@ from prometheus_client import CollectorRegistry, start_http_server, write_to_tex
 from prometheus_client.core import GaugeMetricFamily, InfoMetricFamily
 
 
+# Workarounds for python<3.9
+from typing import List, Optional, Union, Iterator
+
+
 class EthtoolCollector:
     """Collect ethtool metrics,publish them via http or save them to a file."""
 
@@ -153,7 +157,8 @@ class EthtoolCollector:
         :param interface: Interface we make metrics from.
         :param gauge: Destination metric to put the data in.
         """
-        if not (data := self.run_ethtool(interface, "-S")):
+        data = self.run_ethtool(interface, "-S")
+        if not data:
             return
         key_set = set()
         for line in data.decode("utf-8").splitlines():
@@ -162,7 +167,8 @@ class EthtoolCollector:
             if not line or line == "NIC statistics:":
                 continue
             try:
-                if not (key_val := self._parse_key_value_line(line)):
+                key_val = self._parse_key_value_line(line)
+                if not key_val:
                     continue
 
                 key, value = key_val
@@ -191,7 +197,8 @@ class EthtoolCollector:
         :param interface: Interface we make metrics from.
         :param info: Destination metric to put the data in.
         """
-        if not (data := self.run_ethtool(interface, "")):
+        data = self.run_ethtool(interface, "")
+        if not data:
             return
 
         labels = {"device": interface}
@@ -202,8 +209,9 @@ class EthtoolCollector:
             # drop lines without : - continuation of previous line
             if not line or line.startswith("Settings for ") or ":" not in line:
                 continue
-
-            if not (key_val := self._parse_key_value_line(line)):
+            
+            key_val = self._parse_key_value_line(line)
+            if not key_val:
                 continue
 
             key, value = key_val
@@ -220,13 +228,14 @@ class EthtoolCollector:
             labels[key] = value
         info.add_metric(labels.values(), labels)
 
-    def _parse_key_value_line(self, line) -> Optional[list[str, str]]:
+    def _parse_key_value_line(self, line) -> Optional[List[str]]:
         """Parse key: value from line if possible.
 
         :param line: Line to be parsed for key value.
         :return: Parsed key and value from line if parsing was successful.
         """
-        if (spliced := line.split(": ", 1)) and len(spliced) == 2:
+        spliced = line.split(": ", 1)
+        if spliced and len(spliced) == 2:
             return spliced
         self.logger.debug(f"Failed to parse key and value from line: {line}")
         return None
@@ -288,7 +297,8 @@ class EthtoolCollector:
         :param sensors: Destination metric to put the sensors data in.
         :param alarms: Destination metric to put the alarms data in.
         """
-        if not (data := self.run_ethtool(interface, "-m")):
+        data = self.run_ethtool(interface, "-m")
+        if not data:
             # This usually happens when transceiver is missing
             self.logger.info(f"Cannot get transceiver data for {interface}")
             return
@@ -301,8 +311,9 @@ class EthtoolCollector:
             # drop lines without : - continuation of previous line
             if not line or line.startswith("Settings for ") or ":" not in line:
                 continue
-
-            if not (key_val := self._parse_key_value_line(line)):
+            
+            key_val = self._parse_key_value_line(line)
+            if not key_val:
                 continue
 
             key, value = key_val
@@ -374,7 +385,7 @@ class EthtoolCollector:
         yield alarms
         yield gauge
 
-    def find_physical_interfaces(self) -> list[str]:
+    def find_physical_interfaces(self) -> List[str]:
         """Find physical interfaces and optionally filter them."""
         # https://serverfault.com/a/833577/393474
         return [
@@ -388,7 +399,7 @@ class EthtoolCollector:
         ]
 
 
-def _parse_arguments(arguments: list[str]) -> Namespace:
+def _parse_arguments(arguments: List[str]) -> Namespace:
     """Parse CLI args.
 
     :param arguments: Args from override or CLI to be parsed into Namespace.
@@ -499,7 +510,8 @@ def _parse_arguments(arguments: list[str]) -> Namespace:
 if __name__ == "__main__":
     path = ":".join([environ.get("PATH", ""), "/usr/sbin", "/sbin"])
     # Try to find the executable of ethtool.
-    if (ethtool := find_executable("ethtool", path)) is None:
+    ethtool = find_executable("ethtool", path)
+    if ethtool is None:
         exit("Error: cannot find ethtool.")
     # Process the args
     ethtool_collector_args = _parse_arguments(argv[1:])

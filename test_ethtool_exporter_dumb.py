@@ -2,13 +2,14 @@
 from subprocess import Popen, PIPE
 from argparse import Namespace
 from prometheus_client import CollectorRegistry, write_to_textfile
+from typing import List
 
 # Import ther exporter itself
 from ethtool_exporter import EthtoolCollector
 
 
 def test_default_settings():
-    def pathched_find_physical_interfaces() -> list[str]:
+    def pathched_find_physical_interfaces() -> List[str]:
         return ["eth0"]
 
     collector_args = Namespace(debug=False, quiet=False, whitelist_regex=None, blacklist_regex=None)

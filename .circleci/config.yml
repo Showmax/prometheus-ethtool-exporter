@@ -6,13 +6,21 @@ version: 2.1
   - run: pytest
 
 jobs:
-  test_python_2_7:
-    docker:
-      - image: circleci/python:2.7
-    steps: *test_python_steps
   test_python_3_6:
     docker:
       - image: circleci/python:3.6
+    steps: *test_python_steps
+  test_python_3_7:
+    docker:
+      - image: circleci/python:3.7
+    steps: *test_python_steps
+  test_python_3_8:
+    docker:
+      - image: circleci/python:3.8
+    steps: *test_python_steps
+  test_python_3_9:
+    docker:
+      - image: circleci/python:3.9
     steps: *test_python_steps
   test_python_3_10:
     docker:
@@ -21,6 +29,8 @@ jobs:
 workflows:
   main:
     jobs:
-      - test_python_2_7
       - test_python_3_6
+      - test_python_3_7
+      - test_python_3_8
+      - test_python_3_9
       - test_python_3_10
