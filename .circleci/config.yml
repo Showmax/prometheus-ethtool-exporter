@@ -1,0 +1,26 @@
+version: 2.1
+
+.test_python_steps: &test_python_steps
+  - checkout
+  - run: sudo pip install -r requirements.txt -r test-requirements.txt
+  - run: pytest
+
+jobs:
+  test_python_2_7:
+    docker:
+      - image: circleci/python:2.7
+    steps: *test_python_steps
+  test_python_3_6:
+    docker:
+      - image: circleci/python:3.6
+    steps: *test_python_steps
+  test_python_3_10:
+    docker:
+      - image: circleci/python:3.10
+    steps: *test_python_steps
+workflows:
+  main:
+    jobs:
+      - test_python_2_7
+      - test_python_3_6
+      - test_python_3_10

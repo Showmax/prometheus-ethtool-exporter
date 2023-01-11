@@ -1,0 +1,3 @@
+# Using old versions to make it compatible with older Pythons
+pylint==1.9.*
+pytest==4.6.*
