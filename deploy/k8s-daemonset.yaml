@@ -39,7 +39,7 @@ spec:
         command:
           - "sh"
           - "-exc"
-          - "python3 /ethtool-exporter.py -l $(IP):9417 -I '(eth|em|eno|ens|enp)[0-9s]+'"
+          - "python3 /ethtool_exporter.py -l $(IP):9417 -I '(eth|em|eno|ens|enp)[0-9s]+'"
         ports:
         - containerPort: 9417
           hostPort: 9417
