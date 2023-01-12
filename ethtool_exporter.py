@@ -526,19 +526,23 @@ def _parse_arguments(arguments: List[str]) -> Namespace:
     return parsed_arguments
 
 
-if __name__ == "__main__":
+def _get_ethtool_path():
     path = ":".join([environ.get("PATH", ""), "/usr/sbin", "/sbin"])
     # Try to find the executable of ethtool.
     ethtool = find_executable("ethtool", path)
     if ethtool is None:
         exit("Error: cannot find ethtool.")
-    # Process the args
+    return ethtool
+
+if __name__ == "__main__":
+    # Process CLI args
     ethtool_collector_args = _parse_arguments(argv[1:])
+
     # Create new instance of EthtoolCollector.
-    ethtool_path = ""
+    ethtool_path = _get_ethtool_path()
     collector = EthtoolCollector(ethtool_collector_args, ethtool_path)
-    # collector.ethtool = ethtool
     collector.logger.debug("Starting ethtool-collector")
+
     # Create registry for metrics and assign collector.
     registry = CollectorRegistry()
     registry.register(collector)
