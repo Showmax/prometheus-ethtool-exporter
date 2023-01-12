@@ -1,0 +1,126 @@
+# HELP node_net_ethtool_info Ethtool device information
+# TYPE node_net_ethtool_info gauge
+node_net_ethtool_info{device="igb56_int_tp",duplex="Unknown! (255)",link_detected="no",port="Twisted Pair",speed="0"} 1.0
+# HELP node_net_ethtool_xcvr_info Ethtool device transceiver information
+# TYPE node_net_ethtool_xcvr_info gauge
+# HELP node_net_ethtool_xcvr_sensors Ethtool transceiver sensors
+# TYPE node_net_ethtool_xcvr_sensors gauge
+# HELP node_net_ethtool_xcvr_alarms Ethtool transceiver sensor alarms
+# TYPE node_net_ethtool_xcvr_alarms gauge
+# HELP node_net_ethtool Ethtool data
+# TYPE node_net_ethtool gauge
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_packets"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_packets"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_bytes"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_bytes"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_broadcast"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_broadcast"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_multicast"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_multicast"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="multicast"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="collisions"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_crc_errors"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_no_buffer_count"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_missed_errors"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_aborted_errors"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_carrier_errors"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_window_errors"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_abort_late_coll"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_deferred_ok"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_single_coll_ok"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_multi_coll_ok"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_timeout_count"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_long_length_errors"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_short_length_errors"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_align_errors"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_tcp_seg_good"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_tcp_seg_failed"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_flow_control_xon"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_flow_control_xoff"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_flow_control_xon"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_flow_control_xoff"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_long_byte_count"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_dma_out_of_sync"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_smbus"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_smbus"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="dropped_smbus"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="os2bmc_rx_by_bmc"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="os2bmc_tx_by_bmc"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="os2bmc_tx_by_host"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="os2bmc_rx_by_host"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_hwtstamp_timeouts"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_hwtstamp_skipped"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_hwtstamp_cleared"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_errors"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_errors"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_dropped"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_length_errors"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_over_errors"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_frame_errors"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_fifo_errors"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_fifo_errors"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_heartbeat_errors"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_queue_0_packets"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_queue_0_bytes"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_queue_0_restart"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_queue_1_packets"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_queue_1_bytes"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_queue_1_restart"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_queue_2_packets"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_queue_2_bytes"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_queue_2_restart"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_queue_3_packets"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_queue_3_bytes"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_queue_3_restart"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_queue_4_packets"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_queue_4_bytes"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_queue_4_restart"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_queue_5_packets"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_queue_5_bytes"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_queue_5_restart"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_queue_6_packets"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_queue_6_bytes"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_queue_6_restart"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_queue_7_packets"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_queue_7_bytes"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="tx_queue_7_restart"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_0_packets"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_0_bytes"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_0_drops"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_0_csum_err"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_0_alloc_failed"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_1_packets"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_1_bytes"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_1_drops"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_1_csum_err"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_1_alloc_failed"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_2_packets"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_2_bytes"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_2_drops"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_2_csum_err"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_2_alloc_failed"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_3_packets"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_3_bytes"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_3_drops"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_3_csum_err"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_3_alloc_failed"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_4_packets"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_4_bytes"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_4_drops"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_4_csum_err"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_4_alloc_failed"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_5_packets"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_5_bytes"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_5_drops"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_5_csum_err"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_5_alloc_failed"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_6_packets"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_6_bytes"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_6_drops"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_6_csum_err"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_6_alloc_failed"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_7_packets"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_7_bytes"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_7_drops"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_7_csum_err"} 0.0
+node_net_ethtool{device="igb56_int_tp",queue="0",type="rx_queue_7_alloc_failed"} 0.0
