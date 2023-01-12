@@ -8,7 +8,14 @@ from typing import List
 # Import ther exporter itself
 from ethtool_exporter import EthtoolCollector
 
-nic_type_list = ["ixgbe418_sfp_10gsr85", "i40e28_sfp_10gsr85", "i40e21_int_tp", "bnxten418_sfp_10gwtf1", "tg3_418_int_tp"]
+nic_type_list = [
+    # Intel
+    "i40e28_sfp_10gsr85", "i40e21_int_tp", "ixgbe418_sfp_10gsr85", "igb56_int_tp",
+    # Broadcom
+    "bnxten418_sfp_10gwtf1",
+    # Realtek
+    "tg3_418_int_tp"
+]
 
 @pytest.mark.parametrize("nic_type", nic_type_list)
 def test_default_settings(nic_type):
