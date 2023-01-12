@@ -1,0 +1,83 @@
+# HELP node_net_ethtool_info Ethtool device information
+# TYPE node_net_ethtool_info gauge
+node_net_ethtool_info{device="tg3_418_int_tp",duplex="Unknown! (255)",link_detected="no",port="Twisted Pair",speed="0"} 1.0
+# HELP node_net_ethtool_xcvr_info Ethtool device transceiver information
+# TYPE node_net_ethtool_xcvr_info gauge
+# HELP node_net_ethtool_xcvr_sensors Ethtool transceiver sensors
+# TYPE node_net_ethtool_xcvr_sensors gauge
+# HELP node_net_ethtool_xcvr_alarms Ethtool transceiver sensor alarms
+# TYPE node_net_ethtool_xcvr_alarms gauge
+# HELP node_net_ethtool Ethtool data
+# TYPE node_net_ethtool gauge
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_octets"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_fragments"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_ucast_packets"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_mcast_packets"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_bcast_packets"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_fcs_errors"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_align_errors"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_xon_pause_rcvd"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_xoff_pause_rcvd"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_mac_ctrl_rcvd"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_xoff_entered"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_frame_too_long_errors"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_jabbers"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_undersize_packets"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_in_length_errors"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_out_length_errors"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_64_or_less_octet_packets"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_65_to_127_octet_packets"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_128_to_255_octet_packets"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_256_to_511_octet_packets"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_512_to_1023_octet_packets"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_1024_to_1522_octet_packets"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_1523_to_2047_octet_packets"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_2048_to_4095_octet_packets"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_4096_to_8191_octet_packets"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_8192_to_9022_octet_packets"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_octets"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_collisions"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_xon_sent"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_xoff_sent"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_flow_control"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_mac_errors"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_single_collisions"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_mult_collisions"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_deferred"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_excessive_collisions"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_late_collisions"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_collide_2times"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_collide_3times"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_collide_4times"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_collide_5times"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_collide_6times"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_collide_7times"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_collide_8times"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_collide_9times"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_collide_10times"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_collide_11times"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_collide_12times"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_collide_13times"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_collide_14times"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_collide_15times"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_ucast_packets"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_mcast_packets"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_bcast_packets"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_carrier_sense_errors"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_discards"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_errors"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="dma_writeq_full"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="dma_write_prioq_full"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rxbds_empty"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_discards"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_errors"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="rx_threshold_hit"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="dma_readq_full"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="dma_read_prioq_full"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="tx_comp_queue_full"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="ring_set_send_prod_index"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="ring_status_update"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="nic_irqs"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="nic_avoided_irqs"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="nic_tx_threshold_hit"} 0.0
+node_net_ethtool{device="tg3_418_int_tp",queue="0",type="mbuf_lwm_thresh_hit"} 0.0

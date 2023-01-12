@@ -1,0 +1,26 @@
+Settings for eno8403:
+	Supported ports: [ TP ]
+	Supported link modes:   10baseT/Half 10baseT/Full
+	                        100baseT/Half 100baseT/Full
+	                        1000baseT/Half 1000baseT/Full
+	Supported pause frame use: No
+	Supports auto-negotiation: Yes
+	Supported FEC modes: Not reported
+	Advertised link modes:  10baseT/Half 10baseT/Full
+	                        100baseT/Half 100baseT/Full
+	                        1000baseT/Half 1000baseT/Full
+	Advertised pause frame use: No
+	Advertised auto-negotiation: Yes
+	Advertised FEC modes: Not reported
+	Speed: Unknown!
+	Duplex: Unknown! (255)
+	Auto-negotiation: on
+	Port: Twisted Pair
+	PHYAD: 2
+	Transceiver: internal
+	MDI-X: Unknown
+	Supports Wake-on: g
+	Wake-on: d
+        Current message level: 0x000000ff (255)
+                               drv probe link timer ifdown ifup rx_err tx_err
+	Link detected: no

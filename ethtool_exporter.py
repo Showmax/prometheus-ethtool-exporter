@@ -183,7 +183,6 @@ class EthtoolCollector:
                     queue = queue.strip("[]")
                     labels = [interface, key, queue]
                     queued_key = key + queue
-
             except ValueError:
                 self.logger.warning(f'Failed parsing "{line}"')
                 continue
@@ -192,8 +191,15 @@ class EthtoolCollector:
                 continue
 
             if queued_key not in key_set:
-                gauge.add_metric(labels, value)
-                key_set.add(queued_key)
+                try:
+                    # Validate value
+                    float(value)
+                    gauge.add_metric(labels, value)
+                    key_set.add(queued_key)
+                except ValueError as exc:
+                    self.logger.warning('Failed adding metrics labels=%s, value=%s', labels, value, exc_info=exc)
+                    continue
+                
             else:
                 self.logger.warning(
                     f"Item {key} already seen, check the source data for "

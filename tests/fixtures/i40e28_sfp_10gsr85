@@ -1,0 +1,21 @@
+Settings for eth0:
+	Supported ports: [ FIBRE ]
+	Supported link modes:   10000baseSR/Full
+	Supported pause frame use: Symmetric
+	Supports auto-negotiation: Yes
+	Supported FEC modes: Not reported
+	Advertised link modes:  10000baseSR/Full
+	Advertised pause frame use: No
+	Advertised auto-negotiation: Yes
+	Advertised FEC modes: Not reported
+	Speed: 10000Mb/s
+	Duplex: Full
+	Port: FIBRE
+	PHYAD: 0
+	Transceiver: internal
+	Auto-negotiation: off
+	Supports Wake-on: g
+	Wake-on: g
+	Current message level: 0x00000007 (7)
+			       drv probe link
+	Link detected: yes
