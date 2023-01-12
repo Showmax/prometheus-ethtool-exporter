@@ -1,0 +1,3 @@
+# HELP node_net_ethtool_info Ethtool device information
+# TYPE node_net_ethtool_info gauge
+node_net_ethtool_info{device="i40e28_sfp_10gsr85",duplex="Full",link_detected="yes",port="FIBRE",speed="10000000000.0"} 1.0

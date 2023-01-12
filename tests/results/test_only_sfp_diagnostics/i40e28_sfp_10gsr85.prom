@@ -1,0 +1,15 @@
+# HELP node_net_ethtool_xcvr_info Ethtool device transceiver information
+# TYPE node_net_ethtool_xcvr_info gauge
+node_net_ethtool_xcvr_info{connector="0x07 (LC)",device="i40e28_sfp_10gsr85",extended_identifier="0x04 (GBIC/SFP defined by 2-wire interface ID)",identifier="0x03 (SFP)",laser_bias_current_high_alarm_threshold="15.000 mA",laser_bias_current_high_warning_threshold="12.000 mA",laser_bias_current_low_alarm_threshold="2.000 mA",laser_bias_current_low_warning_threshold="3.000 mA",laser_output_power_high_alarm_threshold="1.5849 mW / 2.00 dBm",laser_output_power_high_warning_threshold="1.0000 mW / 0.00 dBm",laser_output_power_low_alarm_threshold="0.1122 mW / -9.50 dBm",laser_output_power_low_warning_threshold="0.1778 mW / -7.50 dBm",laser_rx_power_high_alarm_threshold="1.5849 mW / 2.00 dBm",laser_rx_power_high_warning_threshold="1.0000 mW / 0.00 dBm",laser_rx_power_low_alarm_threshold="0.0389 mW / -14.10 dBm",laser_rx_power_low_warning_threshold="0.0617 mW / -12.10 dBm",laser_wavelength="850nm",length_50um="300m",length_62_5um="150m",length_copper="0m",length_om3="0m",length_smf="0m",length_smf_km="0km",module_temperature_high_alarm_threshold="80.00 degrees C / 176.00 degrees F",module_temperature_high_warning_threshold="70.00 degrees C / 158.00 degrees F",module_temperature_low_alarm_threshold="-10.00 degrees C / 14.00 degrees F",module_temperature_low_warning_threshold="0.00 degrees C / 32.00 degrees F",module_voltage_high_alarm_threshold="3.6300 V",module_voltage_high_warning_threshold="3.4650 V",module_voltage_low_alarm_threshold="2.9700 V",module_voltage_low_warning_threshold="3.1350 V",transceiver_type="FC: Multimode, 50um (M5)",vendor_name="FS",vendor_oui="00:1b:21",vendor_pn="SFP-10GSR-85",vendor_rev="A",vendor_sn="F2020533679"} 1.0
+# HELP node_net_ethtool_xcvr_sensors Ethtool transceiver sensors
+# TYPE node_net_ethtool_xcvr_sensors gauge
+node_net_ethtool_xcvr_sensors{device="i40e28_sfp_10gsr85",type="laser_bias_current_mA"} 6.09
+node_net_ethtool_xcvr_sensors{device="i40e28_sfp_10gsr85",type="laser_output_power_mW"} 0.6367
+node_net_ethtool_xcvr_sensors{device="i40e28_sfp_10gsr85",type="laser_output_power_dBm"} -1.96
+node_net_ethtool_xcvr_sensors{device="i40e28_sfp_10gsr85",type="receiver_signal_average_optical_power_mW"} 0.6486
+node_net_ethtool_xcvr_sensors{device="i40e28_sfp_10gsr85",type="receiver_signal_average_optical_power_dBm"} -1.88
+node_net_ethtool_xcvr_sensors{device="i40e28_sfp_10gsr85",type="module_temperature_degrees_C"} 39.18
+node_net_ethtool_xcvr_sensors{device="i40e28_sfp_10gsr85",type="module_temperature_degrees_F"} 102.52
+node_net_ethtool_xcvr_sensors{device="i40e28_sfp_10gsr85",type="module_voltage_V"} 3.3544
+# HELP node_net_ethtool_xcvr_alarms Ethtool transceiver sensor alarms
+# TYPE node_net_ethtool_xcvr_alarms gauge

@@ -373,36 +373,43 @@ class EthtoolCollector:
         Collect the metrics and yield them. Prometheus client library
         uses this method to respond to http queries or save them to disk.
         """
-        gauge = GaugeMetricFamily(
-            "node_net_ethtool", "Ethtool data", labels=["device", "type", "queue"]
-        )
-        basic_info = InfoMetricFamily(
-            "node_net_ethtool", "Ethtool device information", labels=["device"]
-        )
-        xcvr_info = InfoMetricFamily(
-            "node_net_ethtool_xcvr",
-            "Ethtool device transceiver information",
-            labels=["device"],
-        )
-        sensors = GaugeMetricFamily(
-            "node_net_ethtool_xcvr_sensors",
-            "Ethtool transceiver sensors",
-            labels=["device", "type"],
-        )
-        alarms = GaugeMetricFamily(
-            "node_net_ethtool_xcvr_alarms",
-            "Ethtool transceiver sensor alarms",
-            labels=["device", "type"],
-        )
-        for interface in self.find_physical_interfaces():
-            self.update_ethtool_stats(interface, gauge)
-            self.update_basic_info(interface, basic_info)
-            self.update_xcvr_info(interface, xcvr_info, sensors, alarms)
-        yield basic_info
-        yield xcvr_info
-        yield sensors
-        yield alarms
-        yield gauge
+        if self.args.collect_interface_info:
+            basic_info = InfoMetricFamily(
+                "node_net_ethtool", "Ethtool device information", labels=["device"]
+            )
+            for interface in self.find_physical_interfaces():
+                self.update_basic_info(interface, basic_info)
+            yield basic_info
+
+        if self.args.collect_sfp_diagnostics:
+            xcvr_info = InfoMetricFamily(
+                "node_net_ethtool_xcvr",
+                "Ethtool device transceiver information",
+                labels=["device"],
+            )
+            sensors = GaugeMetricFamily(
+                "node_net_ethtool_xcvr_sensors",
+                "Ethtool transceiver sensors",
+                labels=["device", "type"],
+            )
+            alarms = GaugeMetricFamily(
+                "node_net_ethtool_xcvr_alarms",
+                "Ethtool transceiver sensor alarms",
+                labels=["device", "type"],
+            )
+            for interface in self.find_physical_interfaces():
+                self.update_xcvr_info(interface, xcvr_info, sensors, alarms)
+            yield xcvr_info
+            yield sensors
+            yield alarms
+
+        if self.args.collect_interface_statistics:
+            gauge = GaugeMetricFamily(
+                "node_net_ethtool", "Ethtool data", labels=["device", "type", "queue"]
+            )
+            for interface in self.find_physical_interfaces():
+                self.update_ethtool_stats(interface, gauge)
+            yield gauge
 
     def find_physical_interfaces(self) -> List[str]:
         """Find physical interfaces and optionally filter them."""
@@ -450,6 +457,24 @@ def _parse_arguments(arguments: List[str]) -> Namespace:
 
     parser = ArgumentParser()
     group = parser.add_mutually_exclusive_group(required=True)
+    parser.add_argument(
+        "--collect_interface_statistics",
+        action="store_true",
+        default=True,
+        help="Collect interface statistics from `ethtool -S <interface_name>`",
+    )
+    parser.add_argument(
+        "--collect_interface_info",
+        action="store_true",
+        default=True,
+        help="Collect interface common info from `ethtool <interface_name>`",
+    )
+    parser.add_argument(
+        "--collect_sfp_diagnostics",
+        action="store_true",
+        default=True,
+        help="Collect interface SFP-module diagnostics from `ethtool -m <interface_name>`if possible",
+    )
     group.add_argument(
         "-f",
         "--textfile-name",
