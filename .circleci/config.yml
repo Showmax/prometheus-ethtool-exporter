@@ -4,6 +4,7 @@ version: 2.1
   - checkout
   - run: sudo pip install -r requirements.txt -r test-requirements.txt
   - run: pytest -v
+  - run: python ethtool_exporter.py --help
 
 jobs:
   test_python_3_6:
