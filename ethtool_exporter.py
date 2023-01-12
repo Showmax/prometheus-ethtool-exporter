@@ -171,9 +171,19 @@ class EthtoolCollector:
                 if not key_val:
                     continue
 
-                key, value = key_val
-                key = key.strip()
-                value = float(value.strip())
+                splited_line = line.split(': ')
+                if (len(splited_line) == 2):
+                    key, value = splited_line
+                    labels = [interface, key, '0']
+                    queued_key = key
+                # for broadcom driver fix with [queue]:
+                # [5]: rx_ucast_packets: 73560124745
+                elif (len(splited_line) == 3):
+                    queue, key, value = splited_line
+                    queue = queue.strip("[]")
+                    labels = [interface, key, queue]
+                    queued_key = key + queue
+
             except ValueError:
                 self.logger.warning(f'Failed parsing "{line}"')
                 continue
@@ -181,10 +191,9 @@ class EthtoolCollector:
             if not self.whitelist_blacklist_check(key):
                 continue
 
-            if key not in key_set:
-                gauge.add_metric([interface, key], value)
-                key_set.add(key)
-
+            if queued_key not in key_set:
+                gauge.add_metric(labels, value)
+                key_set.add(queued_key)
             else:
                 self.logger.warning(
                     f"Item {key} already seen, check the source data for "
@@ -305,46 +314,50 @@ class EthtoolCollector:
 
         info_labels = {"device": interface}
         for line in data.decode("utf-8").splitlines():
-            line = line.strip()
-            # drop empty lines
-            # drop the header
-            # drop lines without : - continuation of previous line
-            if not line or line.startswith("Settings for ") or ":" not in line:
-                continue
-            
-            key_val = self._parse_key_value_line(line)
-            if not key_val:
-                continue
-
-            key, value = key_val
-            key = self._remove_separators(key)
-            key = key.replace("(", "").replace(")", "").lower()
-            value = value.strip()
-
-            if key in self.xcvr_info_whitelist:
-                info_labels[key] = value
-
-            elif key in self.xcvr_sensors_whitelist:
-                if key in ("module_voltage", "laser_bias_current"):
-                    self.add_split(sensors, interface, key, value)
-
-                elif key in (
-                    "laser_output_power",
-                    "receiver_signal_average_optical_power",
-                    "module_temperature",
-                ):
-                    for val in value.split(" / "):
-                        self.add_split(sensors, interface, key, val)
-
-            elif key in self.xcvr_alarms_whitelist:
-                if value == "Off":
+            try:
+                line = line.strip()
+                # drop empty lines
+                # drop the header
+                # drop lines without : - continuation of previous line
+                if not line or line.startswith("Settings for ") or ":" not in line:
                     continue
-                labels = {
-                    "device": interface,
-                    "type": key,
-                    "value": value,
-                }
-                alarms.add_metric(labels=labels.values(), value=1.0)
+                
+                key_val = self._parse_key_value_line(line)
+                if not key_val:
+                    continue
+
+                key, value = key_val
+                key = self._remove_separators(key)
+                key = key.replace("(", "").replace(")", "").lower()
+                value = value.strip()
+
+                if key in self.xcvr_info_whitelist:
+                    info_labels[key] = value
+
+                elif key in self.xcvr_sensors_whitelist:
+                    if key in ("module_voltage", "laser_bias_current"):
+                        self.add_split(sensors, interface, key, value)
+
+                    elif key in (
+                        "laser_output_power",
+                        "receiver_signal_average_optical_power",
+                        "module_temperature",
+                    ):
+                        for val in value.split(" / "):
+                            self.add_split(sensors, interface, key, val)
+
+                elif key in self.xcvr_alarms_whitelist:
+                    if value == "Off":
+                        continue
+                    labels = {
+                        "device": interface,
+                        "type": key,
+                        "value": value,
+                    }
+                    alarms.add_metric(labels=labels.values(), value=1.0)
+            except ValueError:
+                self.logger.warning('Failed parsing "{}"'.format(line))
+
         info.add_metric(info_labels.values(), info_labels)
 
     def collect(self) -> Iterator[Union[InfoMetricFamily, GaugeMetricFamily]]:
@@ -355,7 +368,7 @@ class EthtoolCollector:
         uses this method to respond to http queries or save them to disk.
         """
         gauge = GaugeMetricFamily(
-            "node_net_ethtool", "Ethtool data", labels=["device", "type"]
+            "node_net_ethtool", "Ethtool data", labels=["device", "type", "queue"]
         )
         basic_info = InfoMetricFamily(
             "node_net_ethtool", "Ethtool device information", labels=["device"]
