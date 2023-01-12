@@ -10,8 +10,8 @@ daemon.
 You can either use this as a standalone exporter that listens on an HTTP port, or use it to save data
 on disk in a .prom file either periodically or just once, and run it from cron or something similar.
 
-**_WARNING_**: Since version 0.5.0 Python 3.9+ is required.
-
+**_WARNING_**: Since version 0.6.0 Python3 3.9 is supported again.  
+**_WARNING_**: Since version 0.5.0 Python 3.9+ is required.  
 **_WARNING_**: Since version 0.3.0 Python 3.0+ is required. If you need to use Python2, use the 0.2.6 version.
 
 # Usage
