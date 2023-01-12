@@ -15,10 +15,14 @@ from prometheus_client import CollectorRegistry, start_http_server, write_to_tex
 from prometheus_client.core import GaugeMetricFamily, InfoMetricFamily
 
 
+# Workarounds for python<3.9
+from typing import List, Optional, Union, Iterator
+
+
 class EthtoolCollector:
     """Collect ethtool metrics,publish them via http or save them to a file."""
 
-    def __init__(self, args: Optional[list[str]] = None):
+    def __init__(self, args: Namespace, ethtool_path: str = "ethtool"):
         """Construct the object and parse the arguments."""
         self.basic_info_whitelist = (
             "speed",
@@ -90,8 +94,8 @@ class EthtoolCollector:
             for base in self.xcvr_alarms_base
             for alarm in self.xcvr_alarms_ext
         ]
-        self.ethtool: str = ""
-        self.args: Namespace = self._parse_arguments(args or argv[1:])
+        self.ethtool = ethtool_path
+        self.args: Namespace = args
         self.logger: Logger = self._setup_logger()
 
     def _setup_logger(self) -> Logger:
@@ -106,113 +110,6 @@ class EthtoolCollector:
         basicConfig(level=log_level)
         return getLogger("ethtool-collector")
 
-    def _parse_arguments(self, arguments: list[str]) -> Namespace:
-        """Parse CLI args.
-
-        :param arguments: Args from override or CLI to be parsed into Namespace.
-        :return: Parsed args.
-        """
-        parser = ArgumentParser()
-        group = parser.add_mutually_exclusive_group(required=True)
-        group.add_argument(
-            "-f",
-            "--textfile-name",
-            help="Full file path where to store data for node collector to pick up",
-        )
-        group.add_argument(
-            "-l",
-            "--listen",
-            help="OBSOLETE. Use -L/-p instead. Listen host:port, i.e. 0.0.0.0:9417",
-        )
-        group.add_argument(
-            "-p", "--port", type=int, help="Port to listen on, i.e. 9417"
-        )
-        parser.add_argument(
-            "-L", "--listen-address", default="0.0.0.0", help="IP address to listen on"
-        )
-        parser.add_argument(
-            "-i",
-            "--interval",
-            type=int,
-            help=(
-                "Number of seconds between updates of the textfile. "
-                "Default is 5 seconds"
-            ),
-        )
-        parser.add_argument(
-            "-I",
-            "--interface-regex",
-            default=".*",
-            help="Only scrape interfaces whose name matches this regex",
-        )
-        parser.add_argument(
-            "-1",
-            "--oneshot",
-            action="store_true",
-            default=False,
-            help="Run only once and exit. Useful for running in a cronjob",
-        )
-        parser.add_argument(
-            "--debug",
-            action="store_true",
-            default=False,
-            help="Set logging level to DEBUG and see more.",
-        )
-        parser.add_argument(
-            "-q",
-            "--quiet",
-            action="store_true",
-            default=False,
-            help="Silence any error messages and warnings",
-        )
-        wb_list_group = parser.add_mutually_exclusive_group()
-        wb_list_group.add_argument(
-            "-w",
-            "--whitelist-regex",
-            help=(
-                "Only include values whose name matches this regex. "
-                "-w and -b are mutually exclusive"
-            ),
-        )
-        wb_list_group.add_argument(
-            "-b",
-            "--blacklist-regex",
-            help=(
-                "Exclude values whose name matches this regex. "
-                "-w and -b are mutually exclusive"
-            ),
-        )
-        parsed_arguments = parser.parse_args(arguments)
-        self._check_parsed_arguments(parser, parsed_arguments)
-        # Set default value if none is set after validation.
-        if not parsed_arguments.interval:
-            parsed_arguments.interval = 5
-        return parsed_arguments
-
-    def _check_parsed_arguments(
-        self, parser: ArgumentParser, parsed_arguments: Namespace
-    ):
-        """CHeck if arguments have the required / allowed combinations of values.
-
-        :param parser: Used argument parser.
-        :param parsed_arguments: Parsed arguments using the argument parser.
-        """
-        if parsed_arguments.oneshot and not parsed_arguments.textfile_name:
-            self.logger.error("Oneshot has to be used with textfile mode")
-            parser.print_help()
-            exit(1)
-        if parsed_arguments.interval and not parsed_arguments.textfile_name:
-            self.logger.error("Interval has to be used with textfile mode")
-            parser.print_help()
-            exit(1)
-        if (
-            parsed_arguments.listen_address
-            and not parsed_arguments.port
-            and not parsed_arguments.textfile_name
-        ):
-            self.logger.error("Listen address has to be used with a listen port")
-            parser.print_help()
-            exit(1)
 
     def whitelist_blacklist_check(self, stat_name: str) -> bool:
         """Check whether stat_name matches whitelist or blacklist.
@@ -260,7 +157,8 @@ class EthtoolCollector:
         :param interface: Interface we make metrics from.
         :param gauge: Destination metric to put the data in.
         """
-        if not (data := self.run_ethtool(interface, "-S")):
+        data = self.run_ethtool(interface, "-S")
+        if not data:
             return
         key_set = set()
         for line in data.decode("utf-8").splitlines():
@@ -269,7 +167,8 @@ class EthtoolCollector:
             if not line or line == "NIC statistics:":
                 continue
             try:
-                if not (key_val := self._parse_key_value_line(line)):
+                key_val = self._parse_key_value_line(line)
+                if not key_val:
                     continue
 
                 key, value = key_val
@@ -298,7 +197,8 @@ class EthtoolCollector:
         :param interface: Interface we make metrics from.
         :param info: Destination metric to put the data in.
         """
-        if not (data := self.run_ethtool(interface, "")):
+        data = self.run_ethtool(interface, "")
+        if not data:
             return
 
         labels = {"device": interface}
@@ -309,8 +209,9 @@ class EthtoolCollector:
             # drop lines without : - continuation of previous line
             if not line or line.startswith("Settings for ") or ":" not in line:
                 continue
-
-            if not (key_val := self._parse_key_value_line(line)):
+            
+            key_val = self._parse_key_value_line(line)
+            if not key_val:
                 continue
 
             key, value = key_val
@@ -327,13 +228,14 @@ class EthtoolCollector:
             labels[key] = value
         info.add_metric(labels.values(), labels)
 
-    def _parse_key_value_line(self, line) -> Optional[list[str, str]]:
+    def _parse_key_value_line(self, line) -> Optional[List[str]]:
         """Parse key: value from line if possible.
 
         :param line: Line to be parsed for key value.
         :return: Parsed key and value from line if parsing was successful.
         """
-        if (spliced := line.split(": ", 1)) and len(spliced) == 2:
+        spliced = line.split(": ", 1)
+        if spliced and len(spliced) == 2:
             return spliced
         self.logger.debug(f"Failed to parse key and value from line: {line}")
         return None
@@ -395,7 +297,8 @@ class EthtoolCollector:
         :param sensors: Destination metric to put the sensors data in.
         :param alarms: Destination metric to put the alarms data in.
         """
-        if not (data := self.run_ethtool(interface, "-m")):
+        data = self.run_ethtool(interface, "-m")
+        if not data:
             # This usually happens when transceiver is missing
             self.logger.info(f"Cannot get transceiver data for {interface}")
             return
@@ -408,8 +311,9 @@ class EthtoolCollector:
             # drop lines without : - continuation of previous line
             if not line or line.startswith("Settings for ") or ":" not in line:
                 continue
-
-            if not (key_val := self._parse_key_value_line(line)):
+            
+            key_val = self._parse_key_value_line(line)
+            if not key_val:
                 continue
 
             key, value = key_val
@@ -481,7 +385,7 @@ class EthtoolCollector:
         yield alarms
         yield gauge
 
-    def find_physical_interfaces(self) -> list[str]:
+    def find_physical_interfaces(self) -> List[str]:
         """Find physical interfaces and optionally filter them."""
         # https://serverfault.com/a/833577/393474
         return [
@@ -495,14 +399,126 @@ class EthtoolCollector:
         ]
 
 
+def _parse_arguments(arguments: List[str]) -> Namespace:
+    """Parse CLI args.
+
+    :param arguments: Args from override or CLI to be parsed into Namespace.
+    :return: Parsed args.
+    """
+
+    def _check_parsed_arguments(parser: ArgumentParser, parsed_arguments: Namespace):
+        """CHeck if arguments have the required / allowed combinations of values.
+
+        :param parser: Used argument parser.
+        :param parsed_arguments: Parsed arguments using the argument parser.
+        """
+        if parsed_arguments.oneshot and not parsed_arguments.textfile_name:
+            print("Oneshot has to be used with textfile mode")
+            parser.print_help()
+            exit(1)
+        if parsed_arguments.interval and not parsed_arguments.textfile_name:
+            print("Interval has to be used with textfile mode")
+            parser.print_help()
+            exit(1)
+        if (
+            parsed_arguments.listen_address
+            and not parsed_arguments.port
+            and not parsed_arguments.textfile_name
+        ):
+            print("Listen address has to be used with a listen port")
+            parser.print_help()
+            exit(1)
+
+    parser = ArgumentParser()
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
+        "-f",
+        "--textfile-name",
+        help="Full file path where to store data for node collector to pick up",
+    )
+    group.add_argument(
+        "-l",
+        "--listen",
+        help="OBSOLETE. Use -L/-p instead. Listen host:port, i.e. 0.0.0.0:9417",
+    )
+    group.add_argument(
+        "-p", "--port", type=int, help="Port to listen on, i.e. 9417"
+    )
+    parser.add_argument(
+        "-L", "--listen-address", default="0.0.0.0", help="IP address to listen on"
+    )
+    parser.add_argument(
+        "-i",
+        "--interval",
+        type=int,
+        help=(
+            "Number of seconds between updates of the textfile. "
+            "Default is 5 seconds"
+        ),
+    )
+    parser.add_argument(
+        "-I",
+        "--interface-regex",
+        default=".*",
+        help="Only scrape interfaces whose name matches this regex",
+    )
+    parser.add_argument(
+        "-1",
+        "--oneshot",
+        action="store_true",
+        default=False,
+        help="Run only once and exit. Useful for running in a cronjob",
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        default=False,
+        help="Set logging level to DEBUG and see more.",
+    )
+    parser.add_argument(
+        "-q",
+        "--quiet",
+        action="store_true",
+        default=False,
+        help="Silence any error messages and warnings",
+    )
+    wb_list_group = parser.add_mutually_exclusive_group()
+    wb_list_group.add_argument(
+        "-w",
+        "--whitelist-regex",
+        help=(
+            "Only include values whose name matches this regex. "
+            "-w and -b are mutually exclusive"
+        ),
+    )
+    wb_list_group.add_argument(
+        "-b",
+        "--blacklist-regex",
+        help=(
+            "Exclude values whose name matches this regex. "
+            "-w and -b are mutually exclusive"
+        ),
+    )
+    parsed_arguments = parser.parse_args(arguments)
+    _check_parsed_arguments(parser, parsed_arguments)
+    # Set default value if none is set after validation.
+    if not parsed_arguments.interval:
+        parsed_arguments.interval = 5
+    return parsed_arguments
+
+
 if __name__ == "__main__":
     path = ":".join([environ.get("PATH", ""), "/usr/sbin", "/sbin"])
     # Try to find the executable of ethtool.
-    if (ethtool := find_executable("ethtool", path)) is None:
+    ethtool = find_executable("ethtool", path)
+    if ethtool is None:
         exit("Error: cannot find ethtool.")
+    # Process the args
+    ethtool_collector_args = _parse_arguments(argv[1:])
     # Create new instance of EthtoolCollector.
-    collector = EthtoolCollector()
-    collector.ethtool = ethtool
+    ethtool_path = ""
+    collector = EthtoolCollector(ethtool_collector_args, ethtool_path)
+    # collector.ethtool = ethtool
     collector.logger.debug("Starting ethtool-collector")
     # Create registry for metrics and assign collector.
     registry = CollectorRegistry()
