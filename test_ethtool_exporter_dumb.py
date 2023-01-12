@@ -1,4 +1,5 @@
 
+import pytest
 from subprocess import Popen, PIPE
 from argparse import Namespace
 from prometheus_client import CollectorRegistry, write_to_textfile
@@ -8,9 +9,10 @@ from typing import List
 from ethtool_exporter import EthtoolCollector
 
 
-def test_default_settings():
+@pytest.mark.parametrize("nic_type", ["ixgbe418_sfp_10gsr_85"])
+def test_default_settings(nic_type):
     def pathched_find_physical_interfaces() -> List[str]:
-        return ["eth0"]
+        return [nic_type]
 
     collector_args = Namespace(debug=False, quiet=False, whitelist_regex=None, blacklist_regex=None)
     ethtool_collector = EthtoolCollector(collector_args, "tests/stub_ethtool.sh")
@@ -19,10 +21,10 @@ def test_default_settings():
     registry.register(ethtool_collector)
 
     ethtool_collector.collect()
-    write_to_textfile(".test_ethtool_exporter_dumb.prom", registry)
+    write_to_textfile(f".test_{nic_type}.prom", registry)
 
-    proc = Popen(["diff", ".test_ethtool_exporter_dumb.prom", "tests/exporter_result.prom"], stdout=PIPE, stderr=PIPE)
+    proc = Popen(["diff", f".test_{nic_type}.prom", f"tests/result_{nic_type}.prom"], stdout=PIPE, stderr=PIPE)
     data, err = proc.communicate()
     if proc.returncode != 0:
-        err_msg = f"Exporter output doesn't match expected.\nStdout: {data.decode()}\nStdedd: {err.decode()}"
+        err_msg = f"Exporter output doesn't match expected.\nStdout: {data.decode()}\nStderr: {err.decode()}"
         raise Exception(err_msg)
