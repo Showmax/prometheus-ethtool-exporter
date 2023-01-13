@@ -29,7 +29,7 @@ def test_default_settings(nic_type):
         debug=False, quiet=False,
         whitelist_regex=None, blacklist_regex=None,
         collect_interface_statistics=True, collect_interface_info=True, collect_sfp_diagnostics=True,
-        summarize_queues=False
+        summarize_queues=True
     )
 
     ethtool_collector = EthtoolCollector(collector_args, "tests/stub_ethtool.sh")
@@ -56,7 +56,7 @@ def test_only_sfp_diagnostics(nic_type):
         debug=False, quiet=False,
         whitelist_regex=None, blacklist_regex=None,
         collect_interface_statistics=False, collect_interface_info=False, collect_sfp_diagnostics=True,
-        summarize_queues=False
+        summarize_queues=True
     )
 
     ethtool_collector = EthtoolCollector(collector_args, "tests/stub_ethtool.sh")
@@ -83,7 +83,7 @@ def test_only_interface_info(nic_type):
         debug=False, quiet=False,
         whitelist_regex=None, blacklist_regex=None,
         collect_interface_statistics=False, collect_interface_info=True, collect_sfp_diagnostics=False,
-        summarize_queues=False
+        summarize_queues=True
     )
 
     ethtool_collector = EthtoolCollector(collector_args, "tests/stub_ethtool.sh")
@@ -110,7 +110,7 @@ def test_only_interface_statistics(nic_type):
         debug=False, quiet=False,
         whitelist_regex=None, blacklist_regex=None,
         collect_interface_statistics=True, collect_interface_info=False, collect_sfp_diagnostics=False,
-        summarize_queues=False
+        summarize_queues=True
     )
 
     ethtool_collector = EthtoolCollector(collector_args, "tests/stub_ethtool.sh")
@@ -137,7 +137,7 @@ def test_no_enabled_collectors(nic_type):
         debug=False, quiet=False,
         whitelist_regex=None, blacklist_regex=None,
         collect_interface_statistics=False, collect_interface_info=False, collect_sfp_diagnostics=False,
-        summarize_queues=False
+        summarize_queues=True
     )
 
     ethtool_collector = EthtoolCollector(collector_args, "tests/stub_ethtool.sh")
@@ -153,7 +153,7 @@ def test_no_enabled_collectors(nic_type):
     assert file_size == 0
 
 @pytest.mark.parametrize("nic_type", ['bnxten418_sfp_10gwtf1'])
-def test_summarize_queues(nic_type):
+def test_dont_summarize_queues(nic_type):
     def pathched_find_physical_interfaces() -> List[str]:
         return [nic_type]
 
@@ -161,7 +161,7 @@ def test_summarize_queues(nic_type):
         debug=False, quiet=False,
         whitelist_regex=None, blacklist_regex=None,
         collect_interface_statistics=True, collect_interface_info=True, collect_sfp_diagnostics=True,
-        summarize_queues=True
+        summarize_queues=False
     )
 
     ethtool_collector = EthtoolCollector(collector_args, "tests/stub_ethtool.sh")
