@@ -151,4 +151,4 @@ cython_debug/
 .vscode/
 
 # Ignore test files
-.test_*.prom
+.test_*.prom*

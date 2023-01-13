@@ -16,11 +16,24 @@ on disk in a .prom file either periodically or just once, and run it from cron o
 
 # Usage
 ```
-usage: ethtool_exporter.py [-h] (-f TEXTFILE_NAME | -l LISTEN | -p PORT) [-L LISTEN_ADDRESS] [-i INTERVAL] [-I INTERFACE_REGEX] [-1] [--debug] [-q]
+usage: ethtool_exporter.py [-h]  [--debug] [-q]
+                           [--summarize-queues]
+                           [--collect-interface-statistics] [--collect-interface-info] [--collect-sfp-diagnostics]
+                           (-f TEXTFILE_NAME | -l LISTEN | -p PORT) [-L LISTEN_ADDRESS] [-1]
+                           [-i INTERVAL] [-I INTERFACE_REGEX]
                            [-w WHITELIST_REGEX | -b BLACKLIST_REGEX]
 
 optional arguments:
   -h, --help            show this help message and exit
+  --summarize-queues    
+                        Sum per-queue statistics like `[0]: rx_discards: 5, [1]: rx_discards: 10` to `rx_discards: 15`
+                        This kind of stats mostly met at Broadcom NICs.
+  --collect-interface-statistics
+                        Collect interface statistics from `ethtool -S <interface_name>`
+  --collect-interface-info
+                        Collect interface common info from `ethtool <interface_name>`
+  --collect-sfp-diagnostics
+                        Collect interface SFP-module diagnostics from `ethtool -m <interface_name>`if possible
   -f TEXTFILE_NAME, --textfile-name TEXTFILE_NAME
                         Full file path where to store data for node collector to pick up
   -l LISTEN, --listen LISTEN
