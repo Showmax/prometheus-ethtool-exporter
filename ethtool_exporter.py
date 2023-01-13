@@ -479,22 +479,27 @@ def _parse_arguments(arguments: List[str]) -> Namespace:
         "--summarize-queues",
         action="store_true",
         default=False,
-        help="Sum per-queue statistics like `[0]: rx_discards: 5, [1]: rx_discards: 10` to `rx_discards: 15`. This kind of stats mostly met at Broadcom NICs",
+        help=(
+            "Sum per-queue statistics like `[0]: rx_discards: 5, [1]: rx_discards: 10` to `rx_discards: 15`."
+            "This kind of stats mostly met at Broadcom NICs."
+        ),
     )
     parser.add_argument(
-        "--collect_interface_statistics",
+        "--collect-interface-statistics",
         action="store_true",
         default=True,
-        help="Collect interface statistics from `ethtool -S <interface_name>`",
+        help=(
+            "Collect interface statistics from `ethtool -S <interface_name>`"
+        ),
     )
     parser.add_argument(
-        "--collect_interface_info",
+        "--collect-interface-info",
         action="store_true",
         default=True,
         help="Collect interface common info from `ethtool <interface_name>`",
     )
     parser.add_argument(
-        "--collect_sfp_diagnostics",
+        "--collect-sfp-diagnostics",
         action="store_true",
         default=True,
         help="Collect interface SFP-module diagnostics from `ethtool -m <interface_name>`if possible",
