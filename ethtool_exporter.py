@@ -478,7 +478,7 @@ def _parse_arguments(arguments: List[str]) -> Namespace:
     parser.add_argument(
         "--summarize-queues",
         action="store_true",
-        default=False,
+        default=True,
         help=(
             "Sum per-queue statistics like `[0]: rx_discards: 5, [1]: rx_discards: 10` to `rx_discards: 15`."
             "This kind of stats mostly met at Broadcom NICs."
