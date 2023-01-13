@@ -1,14 +1,13 @@
 
-from ipaddress import summarize_address_range
-import pytest
-from os import path
 import inspect
-from subprocess import Popen, PIPE
 from argparse import Namespace
-from prometheus_client import CollectorRegistry, write_to_textfile
+from subprocess import Popen, PIPE
 from typing import List
 
-# Import ther exporter itself
+import pytest
+from prometheus_client import CollectorRegistry, write_to_textfile
+
+# Import the exporter itself
 from ethtool_exporter import EthtoolCollector
 
 nic_type_list = [
@@ -46,11 +45,11 @@ def check_exporter(current_func_name, nic_type, custom_args_dict={}):
     textfile_name = f".{current_func_name}_{nic_type}_.prom"
     write_to_textfile(textfile_name, registry)
 
-    proc = Popen(["diff", textfile_name, f"tests/results/{current_func_name}/{nic_type}.prom"], stdout=PIPE, stderr=PIPE)
-    data, err = proc.communicate()
-    if proc.returncode != 0:
-        err_msg = f"Exporter output doesn't match expected.\nStdout: {data.decode()}\nStderr: {err.decode()}"
-        raise Exception(err_msg)
+    with Popen(["diff", textfile_name, f"tests/results/{current_func_name}/{nic_type}.prom"], stdout=PIPE, stderr=PIPE) as proc:
+        data, err = proc.communicate()
+        if proc.returncode != 0:
+            err_msg = f"Exporter output doesn't match expected.\nStdout: {data.decode()}\nStderr: {err.decode()}"
+            raise Exception(err_msg)
 
     return ethtool_collector, registry
 
@@ -59,7 +58,7 @@ def check_exporter(current_func_name, nic_type, custom_args_dict={}):
 @pytest.mark.parametrize("custom_args", [{}])
 def test_default_settings(nic_type, custom_args):
     current_func_name = inspect.currentframe().f_code.co_name
-    collector,registry = check_exporter(current_func_name, nic_type, custom_args)
+    _collector,_registry = check_exporter(current_func_name, nic_type, custom_args)
 
 @pytest.mark.parametrize("nic_type", ['i40e28_sfp_10gsr85'])
 @pytest.mark.parametrize(
@@ -70,7 +69,7 @@ def test_default_settings(nic_type, custom_args):
 )
 def test_only_sfp_diagnostics(nic_type, custom_args):
     current_func_name = inspect.currentframe().f_code.co_name
-    collector,registry = check_exporter(current_func_name, nic_type, custom_args)
+    _collector,_registry = check_exporter(current_func_name, nic_type, custom_args)
 
 
 @pytest.mark.parametrize("nic_type", ['i40e28_sfp_10gsr85'])
@@ -82,7 +81,7 @@ def test_only_sfp_diagnostics(nic_type, custom_args):
 )
 def test_only_interface_info(nic_type, custom_args):
     current_func_name = inspect.currentframe().f_code.co_name
-    collector,registry = check_exporter(current_func_name, nic_type, custom_args)
+    _collector,_registry = check_exporter(current_func_name, nic_type, custom_args)
 
 
 @pytest.mark.parametrize("nic_type", ['i40e28_sfp_10gsr85'])
@@ -94,7 +93,7 @@ def test_only_interface_info(nic_type, custom_args):
 )
 def test_only_interface_statistics(nic_type, custom_args):
     current_func_name = inspect.currentframe().f_code.co_name
-    collector,registry = check_exporter(current_func_name, nic_type, custom_args)
+    _collector,_registry = check_exporter(current_func_name, nic_type, custom_args)
 
 
 @pytest.mark.parametrize("nic_type", ['i40e28_sfp_10gsr85'])
@@ -106,7 +105,7 @@ def test_only_interface_statistics(nic_type, custom_args):
 )
 def test_no_enabled_collectors(nic_type, custom_args):
     current_func_name = inspect.currentframe().f_code.co_name
-    collector,registry = check_exporter(current_func_name, nic_type, custom_args)
+    _collector,_registry = check_exporter(current_func_name, nic_type, custom_args)
 
 
 @pytest.mark.parametrize("nic_type", ['bnxten418_sfp_10gwtf1'])
@@ -118,16 +117,16 @@ def test_no_enabled_collectors(nic_type, custom_args):
 )
 def test_dont_summarize_queues(nic_type, custom_args):
     current_func_name = inspect.currentframe().f_code.co_name
-    collector,registry = check_exporter(current_func_name, nic_type, custom_args)
+    _collector,_registry = check_exporter(current_func_name, nic_type, custom_args)
 
 
 @pytest.mark.parametrize("nic_type", ["i40e28_sfp_10gsr85"])
 @pytest.mark.parametrize(
     "custom_args",
     [
-        {"blacklist_regex": "^(tx|rx)-[0-9]{1,3}\.(bytes|packets)$"}
+        {"blacklist_regex": "^(tx|rx)-[0-9]{1,3}\\.(bytes|packets)$"}
     ]
 )
 def test_blacklist_regex(nic_type, custom_args):
     current_func_name = inspect.currentframe().f_code.co_name
-    collector,registry = check_exporter(current_func_name, nic_type, custom_args)
+    _collector,_registry = check_exporter(current_func_name, nic_type, custom_args)
