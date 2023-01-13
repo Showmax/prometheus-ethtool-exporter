@@ -103,13 +103,15 @@ class EthtoolCollector:
 
         :return: Logger instance.
         """
-        log_level = DEBUG if self.args.debug else INFO
-        if self.args.quiet:
+        log_level = INFO
+        if self.args.debug:
+            log_level = DEBUG
+        elif self.args.quiet:
             log_level = CRITICAL
 
-        basicConfig(level=log_level)
-        return getLogger("ethtool-collector")
-
+        class_logger = getLogger("ethtool-collector")
+        class_logger.setLevel(log_level)
+        return class_logger
 
     def whitelist_blacklist_check(self, stat_name: str) -> bool:
         """Check whether stat_name matches whitelist or blacklist.
@@ -160,7 +162,7 @@ class EthtoolCollector:
         data = self.run_ethtool(interface, "-S")
         if not data:
             return
-        key_set = set()
+        metrics = {}
         for line in data.decode("utf-8").splitlines():
             line = line.strip()
             # drop empty lines and the header
@@ -174,7 +176,9 @@ class EthtoolCollector:
                 splited_line = line.split(': ')
                 if (len(splited_line) == 2):
                     key, value = splited_line
-                    labels = [interface, key, '0']
+                    labels = [interface, key]
+                    if not self.args.summarize_queues:
+                        labels.append("0")
                     queued_key = key
                 # for broadcom driver fix with [queue]:
                 # [5]: rx_ucast_packets: 73560124745
@@ -182,7 +186,10 @@ class EthtoolCollector:
                     queue, key, value = splited_line
                     queue = queue.strip("[]")
                     labels = [interface, key, queue]
-                    queued_key = key + queue
+                    queued_key = key
+                    if not self.args.summarize_queues:
+                        labels.append(queue)
+                        queued_key = "%s%s" % (key, queue)
             except ValueError:
                 self.logger.warning(f'Failed parsing "{line}"')
                 continue
@@ -190,21 +197,29 @@ class EthtoolCollector:
             if not self.whitelist_blacklist_check(key):
                 continue
 
-            if queued_key not in key_set:
-                try:
-                    # Validate value
-                    float(value)
-                    gauge.add_metric(labels, value)
-                    key_set.add(queued_key)
-                except ValueError as exc:
-                    self.logger.warning('Failed adding metrics labels=%s, value=%s', labels, value, exc_info=exc)
-                    continue
-                
+            try:
+                # Validate value to catch Exception early
+                metric_data = {"labels": labels, "value": float(value)}
+            except Exception as exc:
+                self.logger.warning('Failed adding metrics labels=%s, value=%s', metric_value["labels"], metric_value["value"], exc_info=exc)
+                continue
+
+            if queued_key not in metrics:
+                metrics[queued_key] = metric_data
             else:
-                self.logger.warning(
-                    f"Item {key} already seen, check the source data for "
-                    f"interface {interface}"
-                )
+                if self.args.summarize_queues:
+                    current_metric_value = metrics[queued_key]["value"]
+                    self.logger.debug("Metric `%s:%s` already exists with value %s, `--summarize-queues` enabled, summing them up", queued_key, metric_data, current_metric_value)
+                    metrics[queued_key]["value"] = current_metric_value + metric_data["value"]
+                    self.logger.debug("Metric `%s` new value is %s", queued_key, metrics[queued_key]["value"])
+                else:
+                    self.logger.warning("Metric `%s:%s` already exists, `--summarize-queues` disabled, skipping metric", queued_key, metric_data)
+
+        for metric_value in metrics.values():
+            try:
+                gauge.add_metric(metric_value["labels"], metric_value["value"])
+            except Exception as exc:
+                self.logger.warning('Failed adding metrics labels=%s, value=%s', metric_value["labels"], metric_value["value"], exc_info=exc)
 
     def update_basic_info(self, interface: str, info: InfoMetricFamily):
         """Update metric with info from ethtool for interface interface.
@@ -404,8 +419,11 @@ class EthtoolCollector:
             yield alarms
 
         if self.args.collect_interface_statistics:
+            gauge_label_list = ["device", "type"]
+            if not self.args.summarize_queues:
+                gauge_label_list.append("queue")
             gauge = GaugeMetricFamily(
-                "node_net_ethtool", "Ethtool data", labels=["device", "type", "queue"]
+                "node_net_ethtool", "Ethtool data", labels=gauge_label_list
             )
             for interface in self.find_physical_interfaces():
                 self.update_ethtool_stats(interface, gauge)
@@ -457,6 +475,12 @@ def _parse_arguments(arguments: List[str]) -> Namespace:
 
     parser = ArgumentParser()
     group = parser.add_mutually_exclusive_group(required=True)
+    parser.add_argument(
+        "--summarize-queues",
+        action="store_true",
+        default=False,
+        help="Sum per-queue statistics like `[0]: rx_discards: 5, [1]: rx_discards: 10` to `rx_discards: 15`. This kind of stats mostly met at Broadcom NICs",
+    )
     parser.add_argument(
         "--collect_interface_statistics",
         action="store_true",
@@ -549,7 +573,6 @@ def _parse_arguments(arguments: List[str]) -> Namespace:
     if not parsed_arguments.interval:
         parsed_arguments.interval = 5
     return parsed_arguments
-
 
 def _get_ethtool_path():
     path = ":".join([environ.get("PATH", ""), "/usr/sbin", "/sbin"])
