@@ -153,3 +153,4 @@ cython_debug/
 
 # Ignore test files
 .test_*.prom*
+.tests/
