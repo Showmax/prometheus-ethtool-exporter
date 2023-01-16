@@ -3,7 +3,7 @@ version: 2.1
 .test_python_steps: &test_python_steps
   - checkout
   - run: sudo pip install -r requirements.txt -r test-requirements.txt
-  - run: pytest -v
+  - run: pytest -v --cov=ethtool_exporter --cov-fail-under=64
   - run: python ethtool_exporter.py --help
 
 jobs:
