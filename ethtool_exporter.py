@@ -4,7 +4,7 @@ import re
 from argparse import ArgumentParser, Namespace
 from distutils.spawn import find_executable
 from logging import CRITICAL, DEBUG, INFO, Logger, basicConfig, getLogger
-from os import environ
+import os
 from pathlib import Path
 from subprocess import PIPE, Popen
 from sys import argv, exit
@@ -432,16 +432,12 @@ class EthtoolCollector:
     def find_physical_interfaces(self) -> List[str]:
         """Find physical interfaces and optionally filter them."""
         # https://serverfault.com/a/833577/393474
-        return [
-            file.name
-            for file in Path("/sys/class/net").iterdir()
-            if (
-                file.is_symlink()
-                and "virtual" not in str(file.readlink().resolve())
-                and re.match(self.args.interface_regex, file.name)
-            )
-        ]
-
+        root = '/sys/class/net'
+        for file in os.listdir(root):
+            path = os.path.join(root, file)
+            if os.path.islink(path) and 'virtual' not in os.readlink(path):
+                if re.match(self.args['interface_regex'], file):
+                    yield file
 
 def _parse_arguments(arguments: List[str]) -> Namespace:
     """Parse CLI args.
@@ -580,7 +576,7 @@ def _parse_arguments(arguments: List[str]) -> Namespace:
     return parsed_arguments
 
 def _get_ethtool_path():
-    path = ":".join([environ.get("PATH", ""), "/usr/sbin", "/sbin"])
+    path = ":".join([os.environ.get("PATH", ""), "/usr/sbin", "/sbin"])
     # Try to find the executable of ethtool.
     ethtool = find_executable("ethtool", path)
     if ethtool is None:
