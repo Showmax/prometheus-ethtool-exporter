@@ -94,6 +94,9 @@ class EthtoolCollector:
             for base in self.xcvr_alarms_base
             for alarm in self.xcvr_alarms_ext
         ]
+        # Allow to override in tests
+        self.interface_discovery_dir = '/sys/class/net'
+
         self.ethtool = ethtool_path
         self.args: Namespace = args
         self.logger: Logger = self._setup_logger()
@@ -432,11 +435,10 @@ class EthtoolCollector:
     def find_physical_interfaces(self) -> List[str]:
         """Find physical interfaces and optionally filter them."""
         # https://serverfault.com/a/833577/393474
-        root = '/sys/class/net'
-        for file in os.listdir(root):
-            path = os.path.join(root, file)
+        for file in os.listdir(self.interface_discovery_dir):
+            path = os.path.join(self.interface_discovery_dir, file)
             if os.path.islink(path) and 'virtual' not in os.readlink(path):
-                if re.match(self.args['interface_regex'], file):
+                if re.match(self.args.interface_regex, file):
                     yield file
 
 def _parse_arguments(arguments: List[str]) -> Namespace:
