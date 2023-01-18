@@ -1,0 +1,77 @@
+	Identifier                                : 0x03 (SFP)
+	Extended identifier                       : 0x04 (GBIC/SFP defined by 2-wire interface ID)
+	Connector                                 : 0x07 (LC)
+	Transceiver codes                         : 0x10 0x00 0x00 0x00 0x40 0x00 0x0c 0x00 0x00
+	Transceiver type                          : 10G Ethernet: 10G Base-SR
+	Transceiver type                          : FC: short distance (S)
+	Transceiver type                          : FC: Multimode, 62.5um (M6)
+	Transceiver type                          : FC: Multimode, 50um (M5)
+	Encoding                                  : 0x06 (64B/66B)
+	BR, Nominal                               : 10300MBd
+	Rate identifier                           : 0x00 (unspecified)
+	Length (SMF,km)                           : 0km
+	Length (SMF)                              : 0m
+	Length (50um)                             : 300m
+	Length (62.5um)                           : 150m
+	Length (Copper)                           : 0m
+	Length (OM3)                              : 0m
+	Laser wavelength                          : 850nm
+	Vendor name                               : FS
+	Vendor OUI                                : 00:00:00
+	Vendor PN                                 : SFP-10GSR-85
+	Vendor rev                                :
+	Option values                             : 0x00 0x1a
+	Option                                    : RX_LOS implemented
+	Option                                    : TX_FAULT implemented
+	Option                                    : TX_DISABLE implemented
+	BR margin, max                            : 10%
+	BR margin, min                            : 88%
+	Vendor SN                                 : S2109191251
+	Date code                                 : 210915
+	Optical diagnostics support               : Yes
+	Laser bias current                        : 99.168 mA
+	Laser output power                        : 5.7000 mW / 7.56 dBm
+	Receiver signal average optical power     : 2.7310 mW / 4.36 dBm
+	Module temperature                        : 0.00 degrees C / 32.00 degrees F
+	Module voltage                            : 0.2287 V
+	Alarm/warning flags implemented           : Yes
+	Laser bias current high alarm             : On
+	Laser bias current low alarm              : Off
+	Laser bias current high warning           : Off
+	Laser bias current low warning            : Off
+	Laser output power high alarm             : Off
+	Laser output power low alarm              : On
+	Laser output power high warning           : Off
+	Laser output power low warning            : Off
+	Module temperature high alarm             : Off
+	Module temperature low alarm              : On
+	Module temperature high warning           : Off
+	Module temperature low warning            : Off
+	Module voltage high alarm                 : Off
+	Module voltage low alarm                  : On
+	Module voltage high warning               : Off
+	Module voltage low warning                : Off
+	Laser rx power high alarm                 : Off
+	Laser rx power low alarm                  : Off
+	Laser rx power high warning               : Off
+	Laser rx power low warning                : Off
+	Laser bias current high alarm threshold   : 15.390 mA
+	Laser bias current low alarm threshold    : 0.000 mA
+	Laser bias current high warning threshold : 36.006 mA
+	Laser bias current low warning threshold  : 16.448 mA
+	Laser output power high alarm threshold   : 0.8224 mW / -0.85 dBm
+	Laser output power low alarm threshold    : 0.8224 mW / -0.85 dBm
+	Laser output power high warning threshold : 0.8224 mW / -0.85 dBm
+	Laser output power low warning threshold  : 0.8224 mW / -0.85 dBm
+	Module temperature high alarm threshold   : 3.02 degrees C / 37.43 degrees F
+	Module temperature low alarm threshold    : 7.06 degrees C / 44.71 degrees F
+	Module temperature high warning threshold : 0.00 degrees C / 32.00 degrees F
+	Module temperature low warning threshold  : 0.25 degrees C / 32.45 degrees F
+	Module voltage high alarm threshold       : 0.0012 V
+	Module voltage low alarm threshold        : 0.0006 V
+	Module voltage high warning threshold     : 2.6368 V
+	Module voltage low warning threshold      : 0.0000 V
+	Laser rx power high alarm threshold       : 0.8224 mW / -0.85 dBm
+	Laser rx power low alarm threshold        : 0.8224 mW / -0.85 dBm
+	Laser rx power high warning threshold     : 0.0000 mW / -inf dBm
+	Laser rx power low warning threshold      : 0.0000 mW / -inf dBm
