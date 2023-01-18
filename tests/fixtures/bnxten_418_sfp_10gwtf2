@@ -1,0 +1,23 @@
+Settings for eth2:
+	Supported ports: [ FIBRE ]
+	Supported link modes:   1000baseT/Full
+	                        10000baseT/Full
+	Supported pause frame use: Symmetric Receive-only
+	Supports auto-negotiation: Yes
+	Supported FEC modes: Not reported
+	Advertised link modes:  1000baseT/Full
+	                        10000baseT/Full
+	Advertised pause frame use: No
+	Advertised auto-negotiation: Yes
+	Advertised FEC modes: Not reported
+	Speed: 10000Mb/s
+	Duplex: Full
+	Auto-negotiation: on
+	Port: FIBRE
+	PHYAD: 1
+	Transceiver: internal
+	Supports Wake-on: g
+	Wake-on: d
+        Current message level: 0x00002081 (8321)
+                               drv tx_err hw
+	Link detected: yes
