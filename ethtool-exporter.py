@@ -318,7 +318,7 @@ class EthtoolCollector:
             if key not in self.basic_info_whitelist:
                 continue
             # special handling for special values
-            if (key == "port") and (value == "Other"):
+            if (key == "port") and (value == "Other" or value == "None"):
                 self.ports_without_sfp.append(interface)
                 continue
             try:
