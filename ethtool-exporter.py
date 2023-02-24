@@ -301,6 +301,8 @@ class EthtoolCollector:
         if not (data := self.run_ethtool(interface, "")):
             return
 
+        self.ports_without_sfp = []
+
         labels = {"device": interface}
         for line in data.decode("utf-8").splitlines():
             line = line.strip()
@@ -309,15 +311,16 @@ class EthtoolCollector:
             # drop lines without : - continuation of previous line
             if not line or line.startswith("Settings for ") or ":" not in line:
                 continue
-
             if not (key_val := self._parse_key_value_line(line)):
                 continue
-
             key, value = key_val
             key = key.strip().replace(" ", "_").lower()
             if key not in self.basic_info_whitelist:
                 continue
             # special handling for special values
+            if (key == "port") and (value == "Other" or value == "None"):
+                self.ports_without_sfp.append(interface)
+                continue
             try:
                 if key == "speed":
                     value = self._decode_speed_value(value)
@@ -395,6 +398,9 @@ class EthtoolCollector:
         :param sensors: Destination metric to put the sensors data in.
         :param alarms: Destination metric to put the alarms data in.
         """
+
+        if interface in self.ports_without_sfp:
+            return
         if not (data := self.run_ethtool(interface, "-m")):
             # This usually happens when transceiver is missing
             self.logger.info(f"Cannot get transceiver data for {interface}")
