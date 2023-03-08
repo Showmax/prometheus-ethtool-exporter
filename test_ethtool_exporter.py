@@ -9,8 +9,12 @@ from typing import List
 import pytest
 from prometheus_client import CollectorRegistry, write_to_textfile
 
+def _get_curr_time():
+    return int(1678287354)
+
 # Import the exporter itself
 from ethtool_exporter import EthtoolCollector
+EthtoolCollector._get_curr_time = _get_curr_time
 
 
 class TestEthtoolCollector:
@@ -34,14 +38,15 @@ class TestEthtoolCollector:
         "collect_interface_statistics": True,
         "collect_interface_info": True,
         "collect_sfp_diagnostics": True,
-        "summarize_queues": True
+        "summarize_queues": True,
+        "textfile_name": "/dev/null"
     }
 
     def prepare_pseudo_sys_class_net_dir(self):
         os.mkdir(".tests/sys_class_net")
         for nic_type in self.default_nic_types:
             os.symlink("/dev/null", f".tests/sys_class_net/{nic_type}")
-        os.symlink("/dev/null", f".tests/sys_class_net/i40e28_sfp_10gsr85_non_existent")
+        os.symlink("/dev/null", f".tests/sys_class_net/i40e28_sfp_non_existent")
 
     @classmethod
     def setup_class(cls):
@@ -52,6 +57,8 @@ class TestEthtoolCollector:
     def teardown_class(cls):
         rmtree(".tests")
 
+
+
     def check_exporter(self, current_func_name, custom_args_dict={}, nic_type=None):
         collector_args_dict = {**self.default_args_dict, **custom_args_dict}
         collector_args = Namespace(**collector_args_dict)
@@ -61,6 +68,7 @@ class TestEthtoolCollector:
 
         registry = CollectorRegistry()
         registry.register(ethtool_collector)
+
 
         if not nic_type:
             nic_type = collector_args.interface_regex
@@ -216,7 +224,7 @@ class TestEthtoolCollector:
         "custom_args",
         [
             {
-                "interface_regex": 'i40e28_sfp_10gsr85_non_existent'
+                "interface_regex": 'i40e28_sfp_non_existent'
             }
         ]
     )

@@ -1,3 +1,6 @@
 # HELP node_net_ethtool_info Ethtool device information
 # TYPE node_net_ethtool_info gauge
 node_net_ethtool_info{device="i40e28_sfp_10gsr85",driver="i40e",duplex="Full",firmware-version="8.60 0x8000bd5d 1.3140.0",link_detected="yes",port="FIBRE",speed="10000000000.0",version="4.18.0-448.el8.x86_64"} 1.0
+# HELP node_net_ethtool_timestamp Collection timestamp
+# TYPE node_net_ethtool_timestamp gauge
+node_net_ethtool_timestamp{collector="interface_info",device="i40e28_sfp_10gsr85"} 1.678287354e+09

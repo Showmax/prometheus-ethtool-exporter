@@ -1,0 +1,2 @@
+# HELP node_net_ethtool_timestamp Collection timestamp
+# TYPE node_net_ethtool_timestamp gauge

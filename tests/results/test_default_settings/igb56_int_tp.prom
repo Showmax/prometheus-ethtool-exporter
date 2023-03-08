@@ -124,3 +124,8 @@ node_net_ethtool{device="igb56_int_tp",type="rx_queue_7_bytes"} 0.0
 node_net_ethtool{device="igb56_int_tp",type="rx_queue_7_drops"} 0.0
 node_net_ethtool{device="igb56_int_tp",type="rx_queue_7_csum_err"} 0.0
 node_net_ethtool{device="igb56_int_tp",type="rx_queue_7_alloc_failed"} 0.0
+# HELP node_net_ethtool_timestamp Collection timestamp
+# TYPE node_net_ethtool_timestamp gauge
+node_net_ethtool_timestamp{collector="interface_info",device="igb56_int_tp"} 1.678287354e+09
+node_net_ethtool_timestamp{collector="sfp_diagnostics",device="igb56_int_tp"} 1.678287354e+09
+node_net_ethtool_timestamp{collector="interface_statistics",device="igb56_int_tp"} 1.678287354e+09

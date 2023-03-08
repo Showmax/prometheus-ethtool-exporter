@@ -13,3 +13,6 @@ node_net_ethtool_xcvr_sensors{device="i40e28_sfp_10gsr85",type="module_temperatu
 node_net_ethtool_xcvr_sensors{device="i40e28_sfp_10gsr85",type="module_voltage_V"} 3.3544
 # HELP node_net_ethtool_xcvr_alarms Ethtool transceiver sensor alarms
 # TYPE node_net_ethtool_xcvr_alarms gauge
+# HELP node_net_ethtool_timestamp Collection timestamp
+# TYPE node_net_ethtool_timestamp gauge
+node_net_ethtool_timestamp{collector="sfp_diagnostics",device="i40e28_sfp_10gsr85"} 1.678287354e+09
