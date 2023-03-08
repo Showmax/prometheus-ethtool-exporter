@@ -3,9 +3,8 @@
 import re
 from argparse import ArgumentParser, Namespace
 from distutils.spawn import find_executable
-from logging import CRITICAL, DEBUG, INFO, Logger, basicConfig, getLogger
+from logging import CRITICAL, DEBUG, INFO, Logger, getLogger
 import os
-from pathlib import Path
 from subprocess import PIPE, Popen
 from sys import argv, exit
 from time import sleep
@@ -259,7 +258,7 @@ class EthtoolCollector:
             try:
                 if key == "speed":
                     value = self._decode_speed_value(value)
-            except ValueError:
+            except Exception:
                 self.logger.warning(f'Failed to parse speed in: "{line}"')
                 continue
             labels[key] = value
@@ -274,7 +273,8 @@ class EthtoolCollector:
                 key, value = key_val
                 if key in driver_data_fields:
                     labels[key] = value
-            except ValueError:
+            # TODO: Have no idea how to get into this branch
+            except Exception:   # pragma: no cover
                 self.logger.warning('Failed to parse driver info in: %s', raw_line)
                 continue
         info.add_metric(labels.values(), labels)
@@ -601,9 +601,10 @@ def _get_ethtool_path():
     ethtool = find_executable("ethtool", path)
     if ethtool is None:
         exit("Error: cannot find ethtool.")
-    return ethtool
+    return ethtool # pragma: no cover
 
-if __name__ == "__main__":
+
+def main():  # pragma: no cover
     # Process CLI args
     ethtool_collector_args = _parse_arguments(argv[1:])
 
@@ -643,3 +644,6 @@ if __name__ == "__main__":
             if collector.args.oneshot:
                 exit(0)
             sleep(collector.args.interval)
+
+if __name__ == "__main__":   # pragma: no cover
+    main()

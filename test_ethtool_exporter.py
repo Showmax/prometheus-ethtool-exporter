@@ -17,7 +17,7 @@ class TestEthtoolCollector:
 
     default_nic_types = [
         # Intel
-        "i40e28_sfp_10gsr85", "i40e21_int_tp", "ixgbe418_sfp_10gsr85", "igb56_int_tp",
+        "i40e28_sfp_10gsr85", "i40e21_int_tp", "ixgbe418_sfp_10gsr85", "igb56_int_tp", "i40e21_int_broken",
         # Broadcom
         "bnxten418_sfp_10gwtf1", "bnxten_418_sfp_10gsr85",
         # Realtek
@@ -41,6 +41,7 @@ class TestEthtoolCollector:
         os.mkdir(".tests/sys_class_net")
         for nic_type in self.default_nic_types:
             os.symlink("/dev/null", f".tests/sys_class_net/{nic_type}")
+        os.symlink("/dev/null", f".tests/sys_class_net/i40e28_sfp_10gsr85_non_existent")
 
     @classmethod
     def setup_class(cls):
@@ -163,3 +164,83 @@ class TestEthtoolCollector:
     def test_blacklist_regex(self, custom_args):
         current_func_name = inspect.currentframe().f_code.co_name
         _collector,_registry = self.check_exporter(current_func_name, custom_args)
+
+    @pytest.mark.parametrize(
+        "custom_args",
+        [
+            {
+                "interface_regex": 'i40e28_sfp_10gsr85'
+            }
+        ]
+    )
+    def test_absent_ethtool(self, custom_args):
+        current_func_name = inspect.currentframe().f_code.co_name
+        collector_args_dict = {**self.default_args_dict, **custom_args}
+        collector_args = Namespace(**collector_args_dict)
+
+        with pytest.raises(SystemExit) as pytest_wrapped_e:
+            ethtool_collector = EthtoolCollector(collector_args, "/whatever/stub_ethtool.sh")
+            ethtool_collector.interface_discovery_dir = ".tests/sys_class_net"
+            registry = CollectorRegistry()
+            registry.register(ethtool_collector)
+            nic_type = collector_args.interface_regex
+            textfile_name = f".tests/{current_func_name}_{nic_type}_.prom"
+            write_to_textfile(textfile_name, registry)
+        assert pytest_wrapped_e.type == SystemExit
+        assert pytest_wrapped_e.value.code == 1
+
+    @pytest.mark.parametrize(
+        "custom_args",
+        [
+            {
+                "interface_regex": 'i40e28_sfp_10gsr85'
+            }
+        ]
+    )
+    def test_unexeceable_ethtool(self, custom_args):
+        current_func_name = inspect.currentframe().f_code.co_name
+        collector_args_dict = {**self.default_args_dict, **custom_args}
+        collector_args = Namespace(**collector_args_dict)
+
+        with pytest.raises(SystemExit) as pytest_wrapped_e:
+            ethtool_collector = EthtoolCollector(collector_args, ".tests/sys_class_net")
+            ethtool_collector.interface_discovery_dir = ".tests/sys_class_net"
+            registry = CollectorRegistry()
+            registry.register(ethtool_collector)
+            nic_type = collector_args.interface_regex
+            textfile_name = f".tests/{current_func_name}_{nic_type}_.prom"
+            write_to_textfile(textfile_name, registry)
+        assert pytest_wrapped_e.value.code == 1
+
+    @pytest.mark.parametrize(
+        "custom_args",
+        [
+            {
+                "interface_regex": 'i40e28_sfp_10gsr85_non_existent'
+            }
+        ]
+    )
+    def test_broken_ethtool(self, custom_args):
+        current_func_name = inspect.currentframe().f_code.co_name
+        collector_args_dict = {**self.default_args_dict, **custom_args}
+        collector_args = Namespace(**collector_args_dict)
+
+        with pytest.raises(UnicodeDecodeError):
+            ethtool_collector = EthtoolCollector(collector_args, "xz")
+            ethtool_collector.interface_discovery_dir = ".tests/sys_class_net"
+            registry = CollectorRegistry()
+            registry.register(ethtool_collector)
+            nic_type = collector_args.interface_regex
+            textfile_name = f".tests/{current_func_name}_{nic_type}_.prom"
+            write_to_textfile(textfile_name, registry)
+
+    def test_unfindable_ethtool(self):
+        from ethtool_exporter import _get_ethtool_path
+        with pytest.raises(SystemExit):
+            _get_ethtool_path()
+
+    def test_main(self):
+        from ethtool_exporter import main
+        with pytest.raises(SystemExit) as pytest_wrapped_e:
+            main()
+        assert pytest_wrapped_e.value.code == 2
