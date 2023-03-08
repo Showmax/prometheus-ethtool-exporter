@@ -74,10 +74,11 @@ class TestEthtoolCollector:
 
         return ethtool_collector, registry
 
-    # This test can be passed only on linux
     def test_find_physical_interfaces(self):
-        ethtool_collector = EthtoolCollector(Namespace(**self.default_args_dict), "tests/stub_ethtool.sh")
-        interfaces = list(ethtool_collector.find_physical_interfaces())
+        # This test can be passed only on linux
+        if os.sys.platform == 'linux':
+            ethtool_collector = EthtoolCollector(Namespace(**self.default_args_dict), "tests/stub_ethtool.sh")
+            interfaces = list(ethtool_collector.find_physical_interfaces())
 
     @pytest.mark.parametrize("nic_type", default_nic_types)
     @pytest.mark.parametrize("custom_args", [{}])
