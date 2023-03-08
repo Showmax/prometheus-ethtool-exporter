@@ -1,0 +1,10 @@
+driver: bnxt_en
+version: 4.18.0-448.el8.x86_64
+firmware-version: 220.0.57.0/pkg 22.00.07.60
+expansion-rom-version:
+bus-info: 0000:ca:00.0
+supports-statistics: yes
+supports-test: yes
+supports-eeprom-access: yes
+supports-register-dump: yes
+supports-priv-flags: no

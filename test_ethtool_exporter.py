@@ -19,7 +19,7 @@ class TestEthtoolCollector:
         # Intel
         "i40e28_sfp_10gsr85", "i40e21_int_tp", "ixgbe418_sfp_10gsr85", "igb56_int_tp",
         # Broadcom
-        "bnxten418_sfp_10gwtf1", "bnxten_418_sfp_10gwtf2",
+        "bnxten418_sfp_10gwtf1", "bnxten_418_sfp_10gsr85",
         # Realtek
         "tg3_418_int_tp"
     ]
@@ -74,10 +74,11 @@ class TestEthtoolCollector:
 
         return ethtool_collector, registry
 
-    # This test can be passed only on linux
     def test_find_physical_interfaces(self):
-        ethtool_collector = EthtoolCollector(Namespace(**self.default_args_dict), "tests/stub_ethtool.sh")
-        interfaces = list(ethtool_collector.find_physical_interfaces())
+        # This test can be passed only on linux
+        if os.sys.platform == 'linux':
+            ethtool_collector = EthtoolCollector(Namespace(**self.default_args_dict), "tests/stub_ethtool.sh")
+            interfaces = list(ethtool_collector.find_physical_interfaces())
 
     @pytest.mark.parametrize("nic_type", default_nic_types)
     @pytest.mark.parametrize("custom_args", [{}])
