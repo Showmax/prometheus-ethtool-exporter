@@ -1,0 +1,10 @@
+driver: i40e
+version: 4.18.0-348.el8.x86_64
+firmware-version: 3.25 0x800009e7 1.1638.0
+expansion-rom-version:
+bus-info: 0000:1c:00.0
+supports-statistics: yes
+supports-test: yes
+supports-eeprom-access: yes
+supports-register-dump: yes
+supports-priv-flags: yes

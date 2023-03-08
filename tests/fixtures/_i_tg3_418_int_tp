@@ -1,0 +1,10 @@
+driver: tg3
+version: 4.18.0-269.el8.x86_64
+firmware-version: FFV21.60.16 bc 5720-v1.39
+expansion-rom-version:
+bus-info: 0000:04:00.0
+supports-statistics: yes
+supports-test: yes
+supports-eeprom-access: yes
+supports-register-dump: yes
+supports-priv-flags: no

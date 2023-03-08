@@ -1,0 +1,10 @@
+driver: ixgbe
+version: 5.1.0-k-rh8.2.0
+firmware-version: 0x8000095d, 19.5.12
+expansion-rom-version:
+bus-info: 0000:af:00.0
+supports-statistics: yes
+supports-test: yes
+supports-eeprom-access: yes
+supports-register-dump: yes
+supports-priv-flags: yes

@@ -230,12 +230,16 @@ class EthtoolCollector:
         :param interface: Interface we make metrics from.
         :param info: Destination metric to put the data in.
         """
-        data = self.run_ethtool(interface, "")
-        if not data:
+        iface_data = self.run_ethtool(interface, "")
+        if not iface_data:
+            return
+
+        driver_data = self.run_ethtool(interface, "-i")
+        if not driver_data:
             return
 
         labels = {"device": interface}
-        for line in data.decode("utf-8").splitlines():
+        for line in iface_data.decode("utf-8").splitlines():
             line = line.strip()
             # drop empty lines
             # drop line with the header
@@ -259,6 +263,20 @@ class EthtoolCollector:
                 self.logger.warning(f'Failed to parse speed in: "{line}"')
                 continue
             labels[key] = value
+
+        driver_data_fields = ["driver", "version", "firmware-version"]
+        for raw_line in driver_data.decode("utf-8").splitlines():
+            try:
+                line = raw_line.strip()
+                key_val = self._parse_key_value_line(line)
+                if not key_val:
+                    continue
+                key, value = key_val
+                if key in driver_data_fields:
+                    labels[key] = value
+            except ValueError:
+                self.logger.warning('Failed to parse driver info in: %s', raw_line)
+                continue
         info.add_metric(labels.values(), labels)
 
     def _parse_key_value_line(self, line) -> Optional[List[str]]:

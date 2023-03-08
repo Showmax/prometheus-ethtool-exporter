@@ -19,7 +19,7 @@ class TestEthtoolCollector:
         # Intel
         "i40e28_sfp_10gsr85", "i40e21_int_tp", "ixgbe418_sfp_10gsr85", "igb56_int_tp",
         # Broadcom
-        "bnxten418_sfp_10gwtf1", "bnxten_418_sfp_10gwtf2",
+        "bnxten418_sfp_10gwtf1", "bnxten_418_sfp_10gsr85",
         # Realtek
         "tg3_418_int_tp"
     ]
