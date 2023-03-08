@@ -180,3 +180,8 @@ node_net_ethtool{device="i40e28_sfp_10gsr85",type="port.tx_priority_7_xoff_tx"} 
 node_net_ethtool{device="i40e28_sfp_10gsr85",type="port.rx_priority_7_xon_rx"} 0.0
 node_net_ethtool{device="i40e28_sfp_10gsr85",type="port.rx_priority_7_xoff_rx"} 0.0
 node_net_ethtool{device="i40e28_sfp_10gsr85",type="port.rx_priority_7_xon_2_xoff"} 0.0
+# HELP node_net_ethtool_timestamp Collection timestamp
+# TYPE node_net_ethtool_timestamp gauge
+node_net_ethtool_timestamp{collector="interface_info",device="i40e28_sfp_10gsr85"} 1.678287354e+09
+node_net_ethtool_timestamp{collector="sfp_diagnostics",device="i40e28_sfp_10gsr85"} 1.678287354e+09
+node_net_ethtool_timestamp{collector="interface_statistics",device="i40e28_sfp_10gsr85"} 1.678287354e+09

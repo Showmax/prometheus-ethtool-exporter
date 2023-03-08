@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Collect ethtool metrics,publish them via http or save them to a file."""
+import os
+import time
 import re
 from argparse import ArgumentParser, Namespace
 from distutils.spawn import find_executable
-from logging import CRITICAL, DEBUG, INFO, Logger, basicConfig, getLogger
-import os
-from pathlib import Path
+from logging import CRITICAL, DEBUG, INFO, Logger, getLogger
 from subprocess import PIPE, Popen
 from sys import argv, exit
 from time import sleep
@@ -259,7 +259,7 @@ class EthtoolCollector:
             try:
                 if key == "speed":
                     value = self._decode_speed_value(value)
-            except ValueError:
+            except Exception:
                 self.logger.warning(f'Failed to parse speed in: "{line}"')
                 continue
             labels[key] = value
@@ -274,7 +274,8 @@ class EthtoolCollector:
                 key, value = key_val
                 if key in driver_data_fields:
                     labels[key] = value
-            except ValueError:
+            # TODO: Have no idea how to get into this branch
+            except Exception:   # pragma: no cover
                 self.logger.warning('Failed to parse driver info in: %s', raw_line)
                 continue
         info.add_metric(labels.values(), labels)
@@ -402,6 +403,14 @@ class EthtoolCollector:
 
         info.add_metric(info_labels.values(), info_labels)
 
+    def update_collection_timestamp(self, interface: str, metric_family: GaugeMetricFamily, collector: str):
+        if self.args.textfile_name:
+            metric_family.add_metric([interface, collector], EthtoolCollector._get_curr_time())
+
+    @staticmethod
+    def _get_curr_time():
+        return int(time.time())
+
     def collect(self) -> Iterator[Union[InfoMetricFamily, GaugeMetricFamily]]:
         """
         Collect the metrics.
@@ -409,12 +418,18 @@ class EthtoolCollector:
         Collect the metrics and yield them. Prometheus client library
         uses this method to respond to http queries or save them to disk.
         """
+
+        collection_timestamps = GaugeMetricFamily(
+            "node_net_ethtool_timestamp", "Collection timestamp", labels=["device", "collector"]
+        )
+
         if self.args.collect_interface_info:
             basic_info = InfoMetricFamily(
                 "node_net_ethtool", "Ethtool device information", labels=["device"]
             )
             for interface in self.find_physical_interfaces():
                 self.update_basic_info(interface, basic_info)
+                self.update_collection_timestamp(interface, collection_timestamps, 'interface_info')
             yield basic_info
 
         if self.args.collect_sfp_diagnostics:
@@ -435,6 +450,7 @@ class EthtoolCollector:
             )
             for interface in self.find_physical_interfaces():
                 self.update_xcvr_info(interface, xcvr_info, sensors, alarms)
+                self.update_collection_timestamp(interface, collection_timestamps, 'sfp_diagnostics')
             yield xcvr_info
             yield sensors
             yield alarms
@@ -448,7 +464,11 @@ class EthtoolCollector:
             )
             for interface in self.find_physical_interfaces():
                 self.update_ethtool_stats(interface, gauge)
+                self.update_collection_timestamp(interface, collection_timestamps, 'interface_statistics')
             yield gauge
+
+        if self.args.textfile_name:
+            yield collection_timestamps
 
     def find_physical_interfaces(self) -> List[str]:
         """Find physical interfaces and optionally filter them."""
@@ -601,9 +621,10 @@ def _get_ethtool_path():
     ethtool = find_executable("ethtool", path)
     if ethtool is None:
         exit("Error: cannot find ethtool.")
-    return ethtool
+    return ethtool # pragma: no cover
 
-if __name__ == "__main__":
+
+def main():  # pragma: no cover
     # Process CLI args
     ethtool_collector_args = _parse_arguments(argv[1:])
 
@@ -643,3 +664,6 @@ if __name__ == "__main__":
             if collector.args.oneshot:
                 exit(0)
             sleep(collector.args.interval)
+
+if __name__ == "__main__":   # pragma: no cover
+    main()

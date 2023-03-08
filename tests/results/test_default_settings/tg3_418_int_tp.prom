@@ -81,3 +81,8 @@ node_net_ethtool{device="tg3_418_int_tp",type="nic_irqs"} 0.0
 node_net_ethtool{device="tg3_418_int_tp",type="nic_avoided_irqs"} 0.0
 node_net_ethtool{device="tg3_418_int_tp",type="nic_tx_threshold_hit"} 0.0
 node_net_ethtool{device="tg3_418_int_tp",type="mbuf_lwm_thresh_hit"} 0.0
+# HELP node_net_ethtool_timestamp Collection timestamp
+# TYPE node_net_ethtool_timestamp gauge
+node_net_ethtool_timestamp{collector="interface_info",device="tg3_418_int_tp"} 1.678287354e+09
+node_net_ethtool_timestamp{collector="sfp_diagnostics",device="tg3_418_int_tp"} 1.678287354e+09
+node_net_ethtool_timestamp{collector="interface_statistics",device="tg3_418_int_tp"} 1.678287354e+09
