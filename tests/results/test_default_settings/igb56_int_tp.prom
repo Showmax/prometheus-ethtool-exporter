@@ -1,6 +1,6 @@
 # HELP node_net_ethtool_info Ethtool device information
 # TYPE node_net_ethtool_info gauge
-node_net_ethtool_info{device="igb56_int_tp",driver="igb",duplex="Unknown! (255)",firmware-version="1.67, 0x800010dd, 20.5.16",link_detected="no",port="Twisted Pair",speed="0",version="4.18.0-269.el8.x86_64"} 1.0
+node_net_ethtool_info{device="igb56_int_tp",driver="igb",duplex="Unknown! (255)",firmware_version="1.67, 0x800010dd, 20.5.16",link_detected="no",port="Twisted Pair",speed="0",version="4.18.0-269.el8.x86_64"} 1.0
 # HELP node_net_ethtool_xcvr_info Ethtool device transceiver information
 # TYPE node_net_ethtool_xcvr_info gauge
 # HELP node_net_ethtool_xcvr_sensors Ethtool transceiver sensors

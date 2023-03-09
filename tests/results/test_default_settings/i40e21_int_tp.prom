@@ -1,6 +1,6 @@
 # HELP node_net_ethtool_info Ethtool device information
 # TYPE node_net_ethtool_info gauge
-node_net_ethtool_info{device="i40e21_int_tp",driver="i40e",duplex="Full",firmware-version="3.25 0x800009e7 1.1638.0",link_detected="yes",port="Twisted Pair",speed="1000000000.0",version="4.18.0-348.el8.x86_64"} 1.0
+node_net_ethtool_info{device="i40e21_int_tp",driver="i40e",duplex="Full",firmware_version="3.25 0x800009e7 1.1638.0",link_detected="yes",port="Twisted Pair",speed="1000000000.0",version="4.18.0-348.el8.x86_64"} 1.0
 # HELP node_net_ethtool_xcvr_info Ethtool device transceiver information
 # TYPE node_net_ethtool_xcvr_info gauge
 # HELP node_net_ethtool_xcvr_sensors Ethtool transceiver sensors
