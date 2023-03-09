@@ -1,6 +1,6 @@
 # HELP node_net_ethtool_info Ethtool device information
 # TYPE node_net_ethtool_info gauge
-node_net_ethtool_info{device="bnxten418_sfp_10gwtf1",driver="bnxt_en",duplex="Full",firmware-version="220.0.57.0/pkg 22.00.07.60",link_detected="yes",port="FIBRE",speed="10000000000.0",version="4.18.0-408.el8.x86_64"} 1.0
+node_net_ethtool_info{device="bnxten418_sfp_10gwtf1",driver="bnxt_en",duplex="Full",firmware_version="220.0.57.0/pkg 22.00.07.60",link_detected="yes",port="FIBRE",speed="10000000000.0",version="4.18.0-408.el8.x86_64"} 1.0
 # HELP node_net_ethtool_xcvr_info Ethtool device transceiver information
 # TYPE node_net_ethtool_xcvr_info gauge
 # HELP node_net_ethtool_xcvr_sensors Ethtool transceiver sensors

@@ -172,8 +172,7 @@ class EthtoolCollector:
             if not line or line == "NIC statistics:":
                 continue
             try:
-                key_val = self._parse_key_value_line(line)
-                if not key_val:
+                if not self._parse_key_value_line(line):
                     continue
 
                 splited_line = line.split(': ')
@@ -252,7 +251,6 @@ class EthtoolCollector:
                 continue
 
             key, value = key_val
-            key = key.strip().replace(" ", "_").lower()
             if key not in self.basic_info_whitelist:
                 continue
             # special handling for special values
@@ -264,7 +262,7 @@ class EthtoolCollector:
                 continue
             labels[key] = value
 
-        driver_data_fields = ["driver", "version", "firmware-version"]
+        driver_data_fields = ["driver", "version", "firmware_version"]
         for raw_line in driver_data.decode("utf-8").splitlines():
             try:
                 line = raw_line.strip()
@@ -288,6 +286,8 @@ class EthtoolCollector:
         """
         spliced = line.split(": ", 1)
         if spliced and len(spliced) == 2:
+            spliced[0] = self._clean_label_key(spliced[0])
+            spliced[1] = spliced[1].strip()
             return spliced
         self.logger.debug(f"Failed to parse key and value from line: {line}")
         return None
@@ -335,6 +335,10 @@ class EthtoolCollector:
         """
         return value.strip().replace(",", "_").replace(".", "_").replace(" ", "_")
 
+    @staticmethod
+    def _clean_label_key(key: str) -> str:
+        return key.strip().replace(",", "_").replace(".", "_").replace("-", "_").replace(" ", "_").replace("(", "").replace(")", "").lower()
+
     def update_xcvr_info(
         self,
         interface: str,
@@ -370,9 +374,6 @@ class EthtoolCollector:
                     continue
 
                 key, value = key_val
-                key = self._remove_separators(key)
-                key = key.replace("(", "").replace(")", "").lower()
-                value = value.strip()
 
                 if key in self.xcvr_info_whitelist:
                     info_labels[key] = value
