@@ -4,11 +4,12 @@ NIC statistics:
      rx_bytes: 2005843568778348
      tx_bytes: 411040976718496
      rx_errors: 341
-     tx_errors: 0
+     tx_errors: 0.1.1
      rx_dropped: 0
      tx_dropped: 0
      collisions: 0
      rx_length_errors: 0
+     whatever is this broken line, just ignore it
 NIC statistics:
      rx_crc_errors: 341
      rx_unicast: 2943327092005
