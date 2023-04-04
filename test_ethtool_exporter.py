@@ -228,19 +228,22 @@ class TestEthtoolCollector:
             }
         ]
     )
-    def test_broken_ethtool(self, custom_args):
+    def test_broken_ethtool(self, custom_args, caplog):
         current_func_name = inspect.currentframe().f_code.co_name
         collector_args_dict = {**self.default_args_dict, **custom_args}
         collector_args = Namespace(**collector_args_dict)
 
-        with pytest.raises(UnicodeDecodeError):
-            ethtool_collector = EthtoolCollector(collector_args, "xz")
-            ethtool_collector.interface_discovery_dir = ".tests/sys_class_net"
-            registry = CollectorRegistry()
-            registry.register(ethtool_collector)
-            nic_type = collector_args.interface_regex
-            textfile_name = f".tests/{current_func_name}_{nic_type}_.prom"
-            write_to_textfile(textfile_name, registry)
+        ethtool_collector = EthtoolCollector(collector_args, "xz")
+        ethtool_collector.interface_discovery_dir = ".tests/sys_class_net"
+        registry = CollectorRegistry()
+        registry.register(ethtool_collector)
+        nic_type = collector_args.interface_regex
+        textfile_name = f".tests/{current_func_name}_{nic_type}_.prom"
+        write_to_textfile(textfile_name, registry)
+        assert "Cannot get interface_info" in caplog.text
+        assert "Cannot get sfp_diagnostics" in caplog.text
+        assert "Cannot get interface_statistics" in caplog.text
+        assert "UnicodeDecodeError: 'utf-8' codec can't decode byte 0xfd in position 0: invalid start byte" in caplog.text
 
     def test_unfindable_ethtool(self):
         from ethtool_exporter import _get_ethtool_path

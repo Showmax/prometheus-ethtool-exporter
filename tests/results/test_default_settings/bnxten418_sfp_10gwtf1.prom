@@ -239,5 +239,4 @@ node_net_ethtool{device="bnxten418_sfp_10gwtf1",type="tx_packets_pri7"} 0.0
 # HELP node_net_ethtool_timestamp Collection timestamp
 # TYPE node_net_ethtool_timestamp gauge
 node_net_ethtool_timestamp{collector="interface_info",device="bnxten418_sfp_10gwtf1"} 1.678287354e+09
-node_net_ethtool_timestamp{collector="sfp_diagnostics",device="bnxten418_sfp_10gwtf1"} 1.678287354e+09
 node_net_ethtool_timestamp{collector="interface_statistics",device="bnxten418_sfp_10gwtf1"} 1.678287354e+09

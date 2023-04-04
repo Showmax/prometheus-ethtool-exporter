@@ -134,6 +134,7 @@ class EthtoolCollector:
         :param interface: Interface we want to make metrics from.
         :param parameter: Additional params for running ethtool command.
         """
+        data = None
         command = [self.ethtool, interface]
         if parameter:
             command = [self.ethtool, parameter, interface]
@@ -147,13 +148,9 @@ class EthtoolCollector:
             self.logger.critical(f"Permission error trying to run {self.ethtool}: {e}")
             exit(1)
         data, err = proc.communicate()
-        if proc.returncode != 0:
-            self.logger.error(
-                "Ethtool returned non-zero return "
-                f"code for interface {interface}, the message "
-                f"was: {err}"
-            )
-            return None
+        if proc.returncode != 0 or not data:
+            error_str = f"Ethtool with keys <{parameter}> failed for interface <{interface}>, stderr: {err}"
+            raise Exception(error_str)
         return data
 
     def update_ethtool_stats(self, interface: str, gauge: GaugeMetricFamily):
@@ -429,8 +426,11 @@ class EthtoolCollector:
                 "node_net_ethtool", "Ethtool device information", labels=["device"]
             )
             for interface in self.find_physical_interfaces():
-                self.update_basic_info(interface, basic_info)
-                self.update_collection_timestamp(interface, collection_timestamps, 'interface_info')
+                try:
+                    self.update_basic_info(interface, basic_info)
+                    self.update_collection_timestamp(interface, collection_timestamps, 'interface_info')
+                except Exception as exc:
+                    self.logger.error("Cannot get interface_info", exc_info=exc)
             yield basic_info
 
         if self.args.collect_sfp_diagnostics:
@@ -450,8 +450,11 @@ class EthtoolCollector:
                 labels=["device", "type"],
             )
             for interface in self.find_physical_interfaces():
-                self.update_xcvr_info(interface, xcvr_info, sensors, alarms)
-                self.update_collection_timestamp(interface, collection_timestamps, 'sfp_diagnostics')
+                try:
+                    self.update_xcvr_info(interface, xcvr_info, sensors, alarms)
+                    self.update_collection_timestamp(interface, collection_timestamps, 'sfp_diagnostics')
+                except Exception as exc:
+                    self.logger.error("Cannot get sfp_diagnostics", exc_info=exc)
             yield xcvr_info
             yield sensors
             yield alarms
@@ -464,8 +467,11 @@ class EthtoolCollector:
                 "node_net_ethtool", "Ethtool data", labels=gauge_label_list
             )
             for interface in self.find_physical_interfaces():
-                self.update_ethtool_stats(interface, gauge)
-                self.update_collection_timestamp(interface, collection_timestamps, 'interface_statistics')
+                try:
+                    self.update_ethtool_stats(interface, gauge)
+                    self.update_collection_timestamp(interface, collection_timestamps, 'interface_statistics')
+                except Exception as exc:
+                    self.logger.error("Cannot get interface_statistics", exc_info=exc)
             yield gauge
 
         if self.args.textfile_name:
