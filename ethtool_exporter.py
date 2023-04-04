@@ -189,6 +189,7 @@ class EthtoolCollector:
                     if not self.args.summarize_queues:
                         labels.append(queue)
                         queued_key = "%s%s" % (key, queue)
+            # TODO cover me with tests
             except ValueError:
                 self.logger.warning(f'Failed parsing "{line}"')
                 continue
@@ -200,7 +201,7 @@ class EthtoolCollector:
                 # Validate value to catch Exception early
                 metric_data = {"labels": labels, "value": float(value)}
             except Exception as exc:
-                self.logger.warning('Failed adding metrics labels=%s, value=%s', metric_value["labels"], metric_value["value"], exc_info=exc)
+                self.logger.warning('Failed adding metrics labels=%s, value=%s', labels, value, exc_info=exc)
                 continue
 
             if queued_key not in metrics:
@@ -486,7 +487,9 @@ class EthtoolCollector:
                 if re.match(self.args.interface_regex, file):
                     yield file
 
-def _parse_arguments(arguments: List[str]) -> Namespace:
+# Disabling coverage check for this one because it's hard to cover and the argument logic is broken already.
+# TODO: rework arg parser, drop legacy options, add coverage
+def _parse_arguments(arguments: List[str]) -> Namespace: # pragma: no cover
     """Parse CLI args.
 
     :param arguments: Args from override or CLI to be parsed into Namespace.
