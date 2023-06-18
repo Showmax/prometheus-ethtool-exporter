@@ -1,4 +1,6 @@
 # prometheus-ethtool-exporter
+
+# Legacy from Showmax/prometheus-ethtool-exporter
 A python script that pulls information from ethtool and publishes it in prometheus format.
 
 This utility drew some inspiration from https://github.com/adeverteuil/ethtool_exporter, but simplified it
