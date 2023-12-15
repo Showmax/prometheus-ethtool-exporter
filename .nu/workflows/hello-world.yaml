@@ -1,0 +1,14 @@
+apiVersion: workflows.dev/v1alpha1
+kind: Workflow
+metadata:
+  namespace: pipelines
+spec:
+  branches:
+    - "*"
+    - "!main"
+tasks:
+  say-hello:
+    steps:
+      - name: hello
+        image: 193814090748.dkr.ecr.us-east-1.amazonaws.com/mirror/busybox:latest
+        run: echo "Hello world!"
