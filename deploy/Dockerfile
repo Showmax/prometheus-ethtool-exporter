@@ -1,4 +1,4 @@
-FROM alpine:3.7
+FROM alpine:3.19.1
 
 RUN apk add --no-cache python3 ethtool
 
